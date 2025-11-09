@@ -183,7 +183,7 @@ This project is open source and available for educational purposes. Feel free to
 
 - **Inspired by**: ZANAC (1986) by Compile
 - **Developed with**: p5.js
-- **Created by**: [Your Name]
+- **Created by**: techs targe
 
 ## 🐛 Known Issues
 
