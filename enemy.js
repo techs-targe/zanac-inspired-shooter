@@ -1160,38 +1160,51 @@ class PowerBox {
 
         let distance = dist(this.x, this.y, player.x, player.y);
         if (distance < this.size + player.size) {
-            // Collision detected - box is always destroyed even if player is invulnerable
-            if (this.hasPowerChip && this.formation && !this.formation.touched) {
-                // JACKPOT! Special bonus: +5 main weapon levels without damage
-                let oldLevel = player.mainWeaponLevel;
-                player.mainWeaponLevel = min(player.mainWeaponLevel + 5, 30);
+            // Collision detected - box is ALWAYS destroyed (even during invincibility)
 
-                console.log(`POWERBOX BONUS! Main weapon: ${oldLevel} → ${player.mainWeaponLevel}`);
+            // Check if this is an untouched formation (gamble situation)
+            if (this.formation && !this.formation.touched) {
+                // Untouched formation - gamble result
+                if (this.hasPowerChip) {
+                    // JACKPOT! Correct box hit without attacking formation
+                    let oldLevel = player.mainWeaponLevel;
+                    player.mainWeaponLevel = min(player.mainWeaponLevel + 5, 30);
 
-                // Big visual feedback for the bonus
-                for (let i = 0; i < 50; i++) {
-                    particles.push(new Particle(this.x, this.y, 20, color(255, 255, 0)));
-                }
+                    console.log(`POWERBOX JACKPOT! Main weapon: ${oldLevel} → ${player.mainWeaponLevel}`);
 
-                // Extra score bonus for jackpot
-                addScore(500);
+                    // Big visual feedback for the bonus
+                    for (let i = 0; i < 50; i++) {
+                        particles.push(new Particle(this.x, this.y, 20, color(255, 255, 0)));
+                    }
 
-                // Grant 2 seconds invincibility (same as P-item)
-                player.invulnerable = true;
-                player.invulnerableTime = 120; // 2 seconds
+                    // Extra score bonus for jackpot
+                    addScore(500);
 
-                // Mark formation as touched
-                if (this.formation) {
+                    // Grant 2 seconds invincibility (same as P-item)
+                    player.invulnerable = true;
+                    player.invulnerableTime = 120; // 2 seconds
+
+                    // Mark formation as touched
+                    this.formation.touched = true;
+                } else {
+                    // LOSE! Wrong box hit - take damage unless invulnerable
+                    console.log(`POWERBOX LOSE! Wrong box hit.`);
+
+                    if (!player.invulnerable) {
+                        player.hit();
+                    }
+
+                    // Mark formation as touched (gamble is over)
                     this.formation.touched = true;
                 }
             } else {
-                // Normal collision - damage player only if not invulnerable
+                // Already attacked formation OR no formation - normal collision
                 if (!player.invulnerable) {
                     player.hit();
                 }
             }
 
-            // Always destroy the box on collision (even during invincibility)
+            // ALWAYS destroy the box on collision (even during invincibility)
             this.hp = 0;
             createExplosion(this.x, this.y, this.size);
             addScore(this.scoreValue);

@@ -14,10 +14,10 @@ class InputManager {
 
         // Touch control state
         this.touchButtons = {
-            dpad: { x: 80, y: 0, size: 120 },
-            buttonA: { x: 0, y: 0, size: 50 },  // Main fire
-            buttonB: { x: 0, y: 0, size: 50 },  // Sub fire
-            pauseBtn: { x: 0, y: 0, size: 40 }
+            dpad: { x: 80, y: 0, size: 100 },   // Smaller D-pad
+            buttonA: { x: 0, y: 0, size: 45 },  // Main fire
+            buttonB: { x: 0, y: 0, size: 45 },  // Sub fire
+            pauseBtn: { x: 0, y: 0, size: 35 }  // Pause button
         };
 
         // Active touches for each button
@@ -68,22 +68,26 @@ class InputManager {
         // Update button positions when canvas is ready
         setTimeout(() => {
             const rect = canvas.getBoundingClientRect();
-            const bottomY = rect.height - 80;
 
-            // D-pad on left
-            this.touchButtons.dpad.y = bottomY;
+            // Position controls at the very bottom of the screen
+            const bottomMargin = 70;  // Margin from bottom
+            const sideMargin = 70;     // Margin from sides
 
-            // A button (main fire) on bottom right
-            this.touchButtons.buttonA.x = rect.width - 140;
-            this.touchButtons.buttonA.y = bottomY + 30;
+            // D-pad on bottom left
+            this.touchButtons.dpad.x = sideMargin;
+            this.touchButtons.dpad.y = rect.height - bottomMargin;
 
-            // B button (sub fire) on top right
-            this.touchButtons.buttonB.x = rect.width - 80;
-            this.touchButtons.buttonB.y = bottomY - 30;
+            // B button (sub fire) on bottom right, higher position
+            this.touchButtons.buttonB.x = rect.width - sideMargin;
+            this.touchButtons.buttonB.y = rect.height - bottomMargin - 50;
+
+            // A button (main fire) on bottom right, lower position
+            this.touchButtons.buttonA.x = rect.width - sideMargin - 60;
+            this.touchButtons.buttonA.y = rect.height - bottomMargin;
 
             // Pause button at bottom center
             this.touchButtons.pauseBtn.x = rect.width / 2;
-            this.touchButtons.pauseBtn.y = rect.height - 30;
+            this.touchButtons.pauseBtn.y = rect.height - 25;
         }, 100);
 
         // Touch event handlers
@@ -250,7 +254,7 @@ class InputManager {
         if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) this.down = true;  // S
 
         // Fire keys
-        if (keyIsDown(90) || keyIsDown(88)) this.mainFire = true; // Z or X
+        if (keyIsDown(32) || keyIsDown(90) || keyIsDown(88)) this.mainFire = true; // SPACE, Z, or X
         if (keyIsDown(67) || keyIsDown(86)) this.subFire = true;  // C or V
     }
 
@@ -359,18 +363,18 @@ class InputManager {
         strokeWeight(2);
         ellipse(dpad.x, dpad.y, dpad.size, dpad.size);
 
-        // D-pad directions
+        // D-pad directions (scaled to match size)
         fill(255, 255, 255, this.left ? 80 : 30);
-        triangle(dpad.x - 40, dpad.y, dpad.x - 20, dpad.y - 10, dpad.x - 20, dpad.y + 10);
+        triangle(dpad.x - 35, dpad.y, dpad.x - 18, dpad.y - 8, dpad.x - 18, dpad.y + 8);
 
         fill(255, 255, 255, this.right ? 80 : 30);
-        triangle(dpad.x + 40, dpad.y, dpad.x + 20, dpad.y - 10, dpad.x + 20, dpad.y + 10);
+        triangle(dpad.x + 35, dpad.y, dpad.x + 18, dpad.y - 8, dpad.x + 18, dpad.y + 8);
 
         fill(255, 255, 255, this.up ? 80 : 30);
-        triangle(dpad.x, dpad.y - 40, dpad.x - 10, dpad.y - 20, dpad.x + 10, dpad.y - 20);
+        triangle(dpad.x, dpad.y - 35, dpad.x - 8, dpad.y - 18, dpad.x + 8, dpad.y - 18);
 
         fill(255, 255, 255, this.down ? 80 : 30);
-        triangle(dpad.x, dpad.y + 40, dpad.x - 10, dpad.y + 20, dpad.x + 10, dpad.y + 20);
+        triangle(dpad.x, dpad.y + 35, dpad.x - 8, dpad.y + 18, dpad.x + 8, dpad.y + 18);
 
         // A button (main fire)
         const btnA = this.touchButtons.buttonA;

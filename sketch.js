@@ -62,10 +62,27 @@ function draw() {
 
         // Handle pause from input manager
         if (inputManager.pause) {
-            if (gameState === GAME_STATE.PLAYING) {
+            if (gameState === GAME_STATE.TITLE) {
+                // Start game from title screen
+                gameState = GAME_STATE.PLAYING;
+                initGame();
+            } else if (gameState === GAME_STATE.PLAYING) {
                 gameState = GAME_STATE.PAUSED;
             } else if (gameState === GAME_STATE.PAUSED) {
                 gameState = GAME_STATE.PLAYING;
+            } else if (gameState === GAME_STATE.GAME_OVER) {
+                // Return to title from game over
+                gameState = GAME_STATE.TITLE;
+            }
+        }
+
+        // Also allow main fire button to start game (mobile friendly)
+        if (inputManager.mainFire || inputManager.subFire) {
+            if (gameState === GAME_STATE.TITLE) {
+                gameState = GAME_STATE.PLAYING;
+                initGame();
+            } else if (gameState === GAME_STATE.GAME_OVER) {
+                gameState = GAME_STATE.TITLE;
             }
         }
     }
