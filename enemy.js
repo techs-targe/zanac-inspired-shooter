@@ -1172,14 +1172,7 @@ class PowerBox {
         push();
         translate(this.x, this.y);
 
-        // Glow effect (brighter for P-item box)
-        if (this.hasPowerChip) {
-            let glowAlpha = 100 + sin(this.glowPhase) * 50;
-            fill(255, 255, 150, glowAlpha);
-            noStroke();
-            rect(-this.size * 1.3, -this.size * 1.3, this.size * 2.6, this.size * 2.6);
-        }
-
+        // All boxes look identical - no visual hint about which has power chip
         // Main box
         fill(50, 100, 255);
         stroke(100, 150, 255);
@@ -1191,11 +1184,9 @@ class PowerBox {
         fill(80, 130, 255);
         rect(0, 0, this.size * 1.4, this.size * 1.4);
 
-        // Highlight if has power chip
-        if (this.hasPowerChip) {
-            fill(255, 255, 200, 150);
-            ellipse(-this.size * 0.3, -this.size * 0.3, this.size * 0.8, this.size * 0.8);
-        }
+        // Small highlight for all boxes (not just P-item boxes)
+        fill(120, 170, 255, 100);
+        ellipse(-this.size * 0.3, -this.size * 0.3, this.size * 0.6, this.size * 0.6);
 
         pop();
     }
@@ -1215,13 +1206,13 @@ class PowerBoxFormation {
         this.touched = false; // Has any box been attacked or touched?
         this.powerChipIndex = int(random(0, 3)); // Which box has the power chip (0, 1, or 2)
 
-        // Create formation: triangle shape
+        // Create formation: triangle shape (wider spacing for 1/3 gamble)
         // Leader in front (top)
         this.boxes.push(new PowerBox(x, y, this.powerChipIndex === 0, this));
 
-        // Two followers behind (bottom left and right)
-        this.boxes.push(new PowerBox(x - 20, y + 30, this.powerChipIndex === 1, this));
-        this.boxes.push(new PowerBox(x + 20, y + 30, this.powerChipIndex === 2, this));
+        // Two followers behind (bottom left and right) - wider spacing
+        this.boxes.push(new PowerBox(x - 35, y + 50, this.powerChipIndex === 1, this));
+        this.boxes.push(new PowerBox(x + 35, y + 50, this.powerChipIndex === 2, this));
     }
 
     update() {
