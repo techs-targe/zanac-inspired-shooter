@@ -42,6 +42,9 @@ function setup() {
     canvas.parent('gameCanvas');
     frameRate(FPS);
 
+    // Initialize input manager for keyboard, touch, and gamepad
+    inputManager = new InputManager();
+
     // Reset high score to 0
     highScore = 0;
     localStorage.setItem('znk_highscore', 0);
@@ -51,6 +54,21 @@ function setup() {
 
 function draw() {
     background(10, 5, 25);
+
+    // Update input manager
+    if (inputManager) {
+        inputManager.resetFrame();
+        inputManager.update();
+
+        // Handle pause from input manager
+        if (inputManager.pause) {
+            if (gameState === GAME_STATE.PLAYING) {
+                gameState = GAME_STATE.PAUSED;
+            } else if (gameState === GAME_STATE.PAUSED) {
+                gameState = GAME_STATE.PLAYING;
+            }
+        }
+    }
 
     // Draw scrolling background
     drawBackground();
@@ -72,6 +90,11 @@ function draw() {
             drawGame();
             drawPaused();
             break;
+    }
+
+    // Draw touch controls on top of everything
+    if (inputManager && inputManager.isMobile) {
+        inputManager.drawTouchControls();
     }
 }
 
@@ -113,13 +136,23 @@ function updateGame() {
             player.handleInput();
         }
 
-        // Manual shooting
+        // Manual shooting - use inputManager or keyboard fallback
         if (player && player.alive) {
-            if (keyIsDown(32)) { // SPACE
-                player.shootMain();
-            }
-            if (keyIsDown(90)) { // Z
-                player.shootSub();
+            if (inputManager) {
+                if (inputManager.mainFire) {
+                    player.shootMain();
+                }
+                if (inputManager.subFire) {
+                    player.shootSub();
+                }
+            } else {
+                // Fallback to keyboard
+                if (keyIsDown(32)) { // SPACE
+                    player.shootMain();
+                }
+                if (keyIsDown(90)) { // Z
+                    player.shootSub();
+                }
             }
         }
 

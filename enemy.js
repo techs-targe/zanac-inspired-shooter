@@ -1156,11 +1156,11 @@ class PowerBox {
 
     // Check collision with player - special handling for untouched formations
     checkPlayerCollision(player) {
-        if (!player.alive || player.invulnerable || player.respawning) return false;
+        if (!player.alive || player.respawning) return false;
 
         let distance = dist(this.x, this.y, player.x, player.y);
         if (distance < this.size + player.size) {
-            // Collision detected - box is always destroyed
+            // Collision detected - box is always destroyed even if player is invulnerable
             if (this.hasPowerChip && this.formation && !this.formation.touched) {
                 // JACKPOT! Special bonus: +5 main weapon levels without damage
                 let oldLevel = player.mainWeaponLevel;
@@ -1185,11 +1185,13 @@ class PowerBox {
                     this.formation.touched = true;
                 }
             } else {
-                // Normal collision - damage player
-                player.hit();
+                // Normal collision - damage player only if not invulnerable
+                if (!player.invulnerable) {
+                    player.hit();
+                }
             }
 
-            // Always destroy the box on collision
+            // Always destroy the box on collision (even during invincibility)
             this.hp = 0;
             createExplosion(this.x, this.y, this.size);
             addScore(this.scoreValue);

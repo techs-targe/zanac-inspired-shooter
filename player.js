@@ -109,22 +109,43 @@ class Player {
         // Track movement direction for weapon 0
         let moveX = 0, moveY = 0;
 
-        // Movement
-        if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // A
-            this.x -= this.speed;
-            moveX = -1;
-        }
-        if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // D
-            this.x += this.speed;
-            moveX = 1;
-        }
-        if (keyIsDown(UP_ARROW) || keyIsDown(87)) { // W
-            this.y -= this.speed;
-            moveY = -1;
-        }
-        if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) { // S
-            this.y += this.speed;
-            moveY = 1;
+        // Use inputManager if available (supports keyboard, touch, gamepad)
+        // Fall back to keyboard-only if inputManager not ready
+        if (typeof inputManager !== 'undefined' && inputManager) {
+            if (inputManager.left) {
+                this.x -= this.speed;
+                moveX = -1;
+            }
+            if (inputManager.right) {
+                this.x += this.speed;
+                moveX = 1;
+            }
+            if (inputManager.up) {
+                this.y -= this.speed;
+                moveY = -1;
+            }
+            if (inputManager.down) {
+                this.y += this.speed;
+                moveY = 1;
+            }
+        } else {
+            // Fallback to keyboard-only
+            if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // A
+                this.x -= this.speed;
+                moveX = -1;
+            }
+            if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // D
+                this.x += this.speed;
+                moveX = 1;
+            }
+            if (keyIsDown(UP_ARROW) || keyIsDown(87)) { // W
+                this.y -= this.speed;
+                moveY = -1;
+            }
+            if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) { // S
+                this.y += this.speed;
+                moveY = 1;
+            }
         }
 
         // Update last move direction
