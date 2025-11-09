@@ -1,0 +1,59 @@
+MIT License with Non-Commercial Restrictions
+
+Copyright (c) 2024 techs targe
+
+IMPORTANT LEGAL NOTICE:
+This project is inspired by ZANAC (1986) by Compile. This is an independent,
+fan-made educational project with NO affiliation to the original ZANAC or its
+rights holders. All code, graphics, and assets in this repository are original
+creations.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software WITHOUT RESTRICTION for EDUCATIONAL AND NON-COMMERCIAL purposes,
+including without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and to permit persons to whom the Software is furnished
+to do so, subject to the following conditions:
+
+1. EDUCATIONAL AND NON-COMMERCIAL USE ONLY:
+   The Software and any derivative works may NOT be used for commercial purposes
+   without explicit written permission from the copyright holder.
+
+2. ATTRIBUTION REQUIRED:
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+3. NO MISREPRESENTATION:
+   You may NOT represent this Software or any derivative work as an official
+   ZANAC product or as being endorsed by ZANAC rights holders.
+
+4. DISCLAIMER OF AFFILIATION:
+   Any public distribution must clearly state that this is a fan-made project
+   with no official affiliation to ZANAC, Compile, D4 Enterprise, or any
+   related entities.
+
+5. RESPECT FOR TRADEMARKS:
+   "ZANAC" and related trademarks are property of their respective owners.
+   Use of these names is for descriptive purposes only and does not imply
+   endorsement or affiliation.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+RIGHTS HOLDER NOTICE:
+If you are a rights holder and have concerns about this project, please contact
+the repository owner. We respect intellectual property rights and will respond
+promptly to legitimate concerns.
+
+---
+
+DEPENDENCIES:
+This project uses p5.js (https://p5js.org/), which is licensed under the
+GNU LGPL 2.1 license.

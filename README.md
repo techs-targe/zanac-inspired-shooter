@@ -1,6 +1,8 @@
 # ZNK - ZANAC-Inspired Vertical Shooter
 
-A tribute to the classic 1986 shooter game ZANAC, featuring the revolutionary ALG (Automatic Level of Game) system that dynamically adjusts difficulty based on player performance.
+**An original, fan-made educational project** - A tribute to the classic 1986 shooter game ZANAC, featuring the revolutionary ALG (Automatic Level of Game) system that dynamically adjusts difficulty based on player performance.
+
+> **Note**: This is a completely original implementation with no copyrighted assets from ZANAC. All code, graphics, and game logic are created from scratch for educational purposes.
 
 ![Game Type](https://img.shields.io/badge/Type-Vertical%20Shooter-blue)
 ![Technology](https://img.shields.io/badge/Tech-HTML5%20%2B%20p5.js-green)
@@ -177,13 +179,66 @@ Potential features for future versions:
 
 ## 📜 License
 
-This project is open source and available for educational purposes. Feel free to modify and share!
+This project is open source and available for **educational and non-commercial purposes only**.
+
+MIT License with the following restrictions:
+- ✅ Free for personal, educational, and non-commercial use
+- ✅ Modification and sharing allowed with attribution
+- ❌ Commercial use is NOT permitted without explicit permission
+- ❌ Do not misrepresent this as an official ZANAC product
+
+## ⚖️ Legal Notice / Disclaimer
+
+**IMPORTANT - PLEASE READ:**
+
+This is an **independent, fan-made educational project** created as a tribute to classic vertical shooter games.
+
+### Original Work Declaration
+- **All code, graphics, and game assets** in this project are **100% original creations**
+- No copyrighted materials, sprites, sounds, or code from ZANAC or any other game have been used
+- All game mechanics are implemented from scratch using p5.js
+- Visual elements are created using basic geometric shapes (circles, rectangles, lines)
+
+### Inspiration Attribution
+This project is **inspired by game concepts and mechanics** from:
+- **ZANAC** (1986) developed by Compile
+- Classic vertical scrolling shooter genre conventions
+
+Game concepts, rules, and mechanics are **not protected by copyright** and are freely implementable.
+
+### No Affiliation
+- This project is **NOT affiliated with, endorsed by, or connected to**:
+  - Compile (original developer)
+  - D4 Enterprise (current rights holder)
+  - Any official ZANAC rights holders or licensees
+- This is **not an official ZANAC product** or authorized derivative work
+
+### Trademark Notice
+- "ZANAC" is a trademark of its respective owner
+- This project makes **fair use** of the name for descriptive and educational purposes only
+- The trademark is used **solely to indicate inspiration** from the original game
+- No trademark infringement is intended
+
+### Usage Terms
+- **For educational and non-commercial use only**
+- **No warranty** of any kind is provided
+- Use at your own risk
+- If you believe any content infringes on your rights, please contact the repository owner
+
+### Rights Holder Notice
+If you are a rights holder and have concerns about this project, please open an issue or contact us directly. We respect intellectual property rights and will respond promptly to any legitimate concerns.
+
+---
+
+**This project demonstrates game development concepts and serves as a learning resource for aspiring game developers.**
 
 ## 🙏 Credits
 
 - **Inspired by**: ZANAC (1986) by Compile
-- **Developed with**: p5.js
+- **Original ZANAC Rights**: Currently held by D4 Enterprise Co., Ltd.
+- **Developed with**: p5.js (Open Source)
 - **Created by**: techs targe
+- **Purpose**: Educational fan project and game development learning resource
 
 ## 🐛 Known Issues
 
