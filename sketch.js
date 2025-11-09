@@ -633,13 +633,20 @@ function checkCollisions() {
                         addScore(groundEnemies[j].scoreValue);
                         createExplosion(groundEnemies[j].x, groundEnemies[j].y, groundEnemies[j].size);
 
-                        // Ground enemies have better drop rates
-                        if (random() < 0.40) {
-                            let dropRoll = random();
-                            if (dropRoll < 0.5) {
-                                powerUps.push(new PowerChip(groundEnemies[j].x, groundEnemies[j].y));
-                            } else {
-                                powerUps.push(new SubWeapon(groundEnemies[j].x, groundEnemies[j].y));
+                        // Call onDestroyed for special behaviors (AI-AI, Supply Base, etc.)
+                        if (groundEnemies[j].onDestroyed) {
+                            groundEnemies[j].onDestroyed();
+                        }
+
+                        // Normal ground enemies have better drop rates (not AI-AI or Supply Base)
+                        if (!groundEnemies[j].isSpecial && !groundEnemies[j].isSupplyBase) {
+                            if (random() < 0.40) {
+                                let dropRoll = random();
+                                if (dropRoll < 0.5) {
+                                    powerUps.push(new PowerChip(groundEnemies[j].x, groundEnemies[j].y));
+                                } else {
+                                    powerUps.push(new SubWeapon(groundEnemies[j].x, groundEnemies[j].y));
+                                }
                             }
                         }
 

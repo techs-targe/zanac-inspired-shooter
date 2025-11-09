@@ -945,20 +945,31 @@ class SpecialAIAI {
     onDestroyed() {
         // Special rewards when destroyed
         if (player && player.alive) {
+            console.log('AI-AI DESTROYED! BONUS ACTIVATED!');
+
             // Main weapon +15 levels
+            let oldMainLevel = player.mainWeaponLevel;
             player.mainWeaponLevel = min(30, player.mainWeaponLevel + 15);
+            console.log(`Main weapon: ${oldMainLevel} → ${player.mainWeaponLevel}`);
 
             // Sub weapon level 5
+            let oldSubLevel = player.subWeaponLevel;
             player.subWeaponLevel = 5;
             if (player.subWeaponType !== 0) {
                 player.initSubWeapon(player.subWeaponType);
             }
+            console.log(`Sub weapon level: ${oldSubLevel} → ${player.subWeaponLevel}`);
 
             // Add 1 life
+            let oldLives = player.lives;
             player.lives++;
+            console.log(`Lives: ${oldLives} → ${player.lives}`);
 
-            // Visual feedback
-            createExplosion(this.x, this.y, this.size * 3);
+            // Huge visual feedback - gold particles everywhere!
+            for (let i = 0; i < 100; i++) {
+                particles.push(new Particle(this.x, this.y, 30, color(255, 215, 0)));
+            }
+            createExplosion(this.x, this.y, this.size * 5);
         }
     }
 
@@ -1151,13 +1162,19 @@ class PowerBox {
         if (distance < this.size + player.size) {
             // Collision detected - box is always destroyed
             if (this.hasPowerChip && this.formation && !this.formation.touched) {
-                // Special bonus: +5 main weapon levels without damage
+                // JACKPOT! Special bonus: +5 main weapon levels without damage
+                let oldLevel = player.mainWeaponLevel;
                 player.mainWeaponLevel = min(player.mainWeaponLevel + 5, 30);
 
-                // Visual feedback
-                for (let i = 0; i < 20; i++) {
-                    particles.push(new Particle(this.x, this.y, 10, color(255, 255, 100)));
+                console.log(`POWERBOX BONUS! Main weapon: ${oldLevel} → ${player.mainWeaponLevel}`);
+
+                // Big visual feedback for the bonus
+                for (let i = 0; i < 50; i++) {
+                    particles.push(new Particle(this.x, this.y, 20, color(255, 255, 0)));
                 }
+
+                // Extra score bonus for jackpot
+                addScore(500);
 
                 // Mark formation as touched
                 if (this.formation) {
