@@ -75,6 +75,20 @@ class PenetratingBullet extends Bullet {
         this.penetrating = true;
     }
 
+    update() {
+        super.update();
+
+        // Weapon 1 destroys enemy bullets on contact
+        if (this.isPlayerBullet && this.damage >= 2) { // Only weapon 1, not weapon 7
+            for (let i = enemyBullets.length - 1; i >= 0; i--) {
+                let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
+                if (d < this.size + enemyBullets[i].size) {
+                    enemyBullets.splice(i, 1);
+                }
+            }
+        }
+    }
+
     draw() {
         push();
         noStroke();
@@ -286,6 +300,14 @@ class BoomerangBullet extends Bullet {
                 this.vx = 0;
             }
         }
+
+        // Weapon 5 destroys enemy bullets on contact
+        for (let i = enemyBullets.length - 1; i >= 0; i--) {
+            let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
+            if (d < this.size + enemyBullets[i].size) {
+                enemyBullets.splice(i, 1);
+            }
+        }
     }
 
     draw() {
@@ -350,6 +372,18 @@ class StraightLaserBullet extends Bullet {
         this.penetrating = true;
     }
 
+    update() {
+        super.update();
+
+        // Weapon 5 laser destroys enemy bullets on contact
+        for (let i = enemyBullets.length - 1; i >= 0; i--) {
+            let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
+            if (d < this.laserLength / 2 + enemyBullets[i].size) { // Use laser length for hitbox
+                enemyBullets.splice(i, 1);
+            }
+        }
+    }
+
     draw() {
         push();
 
@@ -409,12 +443,12 @@ class PlasmaBullet extends Bullet {
     update() {
         super.update();
 
-        // Check collision with enemy bullets - disappear and damage all air enemies
+        // Check collision with enemy bullets - clear ALL enemy bullets and damage all air enemies
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
             if (d < this.size + enemyBullets[i].size) {
-                // Remove enemy bullet
-                enemyBullets.splice(i, 1);
+                // Clear ALL enemy bullets from screen
+                this.clearAllEnemyBullets();
                 // Trigger AoE damage to all air enemies
                 this.damageAllAirEnemies();
                 // Mark this bullet for removal
@@ -422,6 +456,11 @@ class PlasmaBullet extends Bullet {
                 return;
             }
         }
+    }
+
+    clearAllEnemyBullets() {
+        // Clear all enemy bullets from the screen
+        enemyBullets.length = 0;
     }
 
     damageAllAirEnemies() {
@@ -448,8 +487,9 @@ class PlasmaBullet extends Bullet {
         let d = dist(this.x, this.y, target.x, target.y);
         let doesHit = d < this.size + target.size;
 
-        // If hitting an enemy, trigger AoE damage
+        // If hitting an enemy, trigger AoE damage and clear all enemy bullets
         if (doesHit && !this.hasTriggered) {
+            this.clearAllEnemyBullets();
             this.damageAllAirEnemies();
         }
 
