@@ -1176,6 +1176,10 @@ class PowerBox {
                 // Extra score bonus for jackpot
                 addScore(500);
 
+                // Grant 2 seconds invincibility (same as P-item)
+                player.invulnerable = true;
+                player.invulnerableTime = 120; // 2 seconds
+
                 // Mark formation as touched
                 if (this.formation) {
                     this.formation.touched = true;
@@ -1276,7 +1280,7 @@ class PowerBoxFormation {
 // Drops 1UP if killed with sub weapon BEFORE using main weapon
 class SpecialCrow {
     constructor() {
-        this.x = GAME_WIDTH + 20; // Start from right edge offscreen
+        this.x = GAME_WIDTH - 50; // Start from right edge
         this.y = -20; // Start above screen
         this.size = 12;
         this.hp = 1;
@@ -1285,47 +1289,28 @@ class SpecialCrow {
         this.isSpecialCrow = true;
         this.canShoot = false;
 
-        // Movement pattern: right edge → center → U-turn → top
-        this.phase = 0; // 0: descend, 1: U-turn, 2: ascend
-        this.targetY = GAME_HEIGHT / 2; // Descend to center
-        this.speed = 2.0;
+        // Movement pattern: straight down → rapid straight up
+        this.phase = 0; // 0: descend, 1: ascend rapidly
+        this.targetY = GAME_HEIGHT / 2; // Turn point at center
+        this.descendSpeed = 2.5; // Speed going down
+        this.ascendSpeed = 5.0; // Rapid speed going up
         this.angle = 0; // For flapping animation
-
-        // U-turn parameters
-        this.turnStartY = GAME_HEIGHT / 2;
-        this.turnRadius = 30;
-        this.turnAngle = 0; // 0 to PI for U-turn
     }
 
     update() {
         this.angle += 0.15; // Wing flapping animation
 
         if (this.phase === 0) {
-            // Phase 0: Descend from right edge toward center
-            this.y += this.speed;
-            this.x -= this.speed * 0.3; // Slight leftward movement
+            // Phase 0: Straight down
+            this.y += this.descendSpeed;
 
+            // When reaching center, switch to rapid ascent
             if (this.y >= this.targetY) {
                 this.phase = 1;
-                this.turnStartY = this.y;
-                this.turnAngle = 0;
             }
         } else if (this.phase === 1) {
-            // Phase 1: U-turn (semicircle)
-            this.turnAngle += 0.05;
-
-            // Calculate position on semicircle
-            let centerX = this.x - this.turnRadius;
-            this.x = centerX + this.turnRadius * cos(this.turnAngle);
-            this.y = this.turnStartY + this.turnRadius * sin(this.turnAngle);
-
-            if (this.turnAngle >= PI) {
-                this.phase = 2;
-            }
-        } else if (this.phase === 2) {
-            // Phase 2: Ascend and exit
-            this.y -= this.speed;
-            this.x -= this.speed * 0.3; // Continue leftward
+            // Phase 1: Rapid straight up
+            this.y -= this.ascendSpeed;
         }
     }
 
