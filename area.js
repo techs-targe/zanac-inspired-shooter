@@ -12,12 +12,26 @@ class AreaManager {
         this.groundEnemySpawnPoints = [];
         this.aiaiSpawned = false; // Track if AI-AI has spawned in this area
         this.supplyBasesSpawned = []; // Track which supply bases have been spawned
+        this.powerBoxFormations = []; // Track PowerBox formations
+        this.powerBoxMassSpawned = false; // Track if mass spawn has occurred
         this.scrollSpeed = 1.5; // Default scroll speed
+        this.normalScrollSpeed = 1.5; // Normal scroll speed
+        this.highScrollSpeed = 1.5; // High scroll speed for high-speed areas
+        this.isInHighSpeed = false; // Track if currently in high-speed section
 
         // Area configurations
         this.areaConfigs = this.initAreaConfigs();
         this.currentConfig = this.areaConfigs[this.currentArea - 1];
-        this.scrollSpeed = this.currentConfig.scrollSpeed || 1.5;
+
+        // Initialize high-speed tracking
+        if (this.currentConfig.hasHighSpeed) {
+            this.normalScrollSpeed = 1.5;
+            this.highScrollSpeed = this.currentConfig.scrollSpeed;
+            this.scrollSpeed = this.highScrollSpeed;
+            this.isInHighSpeed = true;
+        } else {
+            this.scrollSpeed = 1.5;
+        }
     }
 
     initAreaConfigs() {
@@ -185,8 +199,22 @@ class AreaManager {
 
         this.areaProgress++;
 
+        // Handle high-speed area transitions
+        // High-speed for first half (0-1500), normal for second half (1500-3000)
+        if (this.currentConfig.hasHighSpeed && this.areaProgress === 1500 && this.isInHighSpeed) {
+            // Switch from high-speed to normal at midpoint
+            this.scrollSpeed = this.normalScrollSpeed;
+            this.isInHighSpeed = false;
+        }
+
         // Spawn supply bases at specific progress points
         this.spawnSupplyBases();
+
+        // Spawn PowerBox formations
+        this.spawnPowerBoxes();
+
+        // Update PowerBox formations
+        this.updatePowerBoxFormations();
 
         // Spawn AI-AI at midpoint (progress = 1500) in specific areas
         if (this.areaProgress === 1500 && this.currentConfig.hasAiai && !this.aiaiSpawned) {
@@ -331,6 +359,55 @@ class AreaManager {
         }
     }
 
+    spawnPowerBoxFormation(x) {
+        // Create a new PowerBox formation at the specified x position
+        let formation = new PowerBoxFormation(x, -40);
+        this.powerBoxFormations.push(formation);
+    }
+
+    spawnPowerBoxes() {
+        // Random PowerBox spawning in all areas (low frequency)
+        if (frameCount % 180 === 0 && random() < 0.15) { // Every 3 seconds, 15% chance
+            let x = random(60, GAME_WIDTH - 60);
+            this.spawnPowerBoxFormation(x);
+        }
+
+        // Mass spawn at 30% progress (900) in areas 3, 7, 10
+        if (!this.powerBoxMassSpawned && this.areaProgress === 900) {
+            if (this.currentArea === 3 || this.currentArea === 7 || this.currentArea === 10) {
+                // Spawn 5-7 formations in quick succession
+                let numFormations = int(random(5, 8));
+                for (let i = 0; i < numFormations; i++) {
+                    setTimeout(() => {
+                        let x = random(60, GAME_WIDTH - 60);
+                        this.spawnPowerBoxFormation(x);
+                    }, i * 300); // Spawn one every 0.3 seconds
+                }
+                this.powerBoxMassSpawned = true;
+            }
+        }
+    }
+
+    updatePowerBoxFormations() {
+        // Update all PowerBox formations
+        for (let i = this.powerBoxFormations.length - 1; i >= 0; i--) {
+            let formation = this.powerBoxFormations[i];
+            formation.update();
+
+            // Remove if all boxes destroyed or offscreen
+            if (formation.allDestroyed() || formation.isOffscreen()) {
+                this.powerBoxFormations.splice(i, 1);
+            }
+        }
+    }
+
+    drawPowerBoxFormations() {
+        // Draw all PowerBox formations
+        for (let formation of this.powerBoxFormations) {
+            formation.draw();
+        }
+    }
+
     spawnBoss() {
         if (!this.bossActive && !this.bossDefeated) {
             this.bossActive = true;
@@ -354,9 +431,21 @@ class AreaManager {
             this.bossDefeatedTimer = 0;
             this.aiaiSpawned = false; // Reset AI-AI spawn flag
             this.supplyBasesSpawned = []; // Reset supply base spawn tracking
+            this.powerBoxFormations = []; // Reset PowerBox formations
+            this.powerBoxMassSpawned = false; // Reset mass spawn flag
             this.groundEnemies = [];
             this.currentConfig = this.areaConfigs[this.currentArea - 1];
-            this.scrollSpeed = this.currentConfig.scrollSpeed || 1.5;
+
+            // Reset high-speed tracking for new area
+            if (this.currentConfig.hasHighSpeed) {
+                this.normalScrollSpeed = 1.5;
+                this.highScrollSpeed = this.currentConfig.scrollSpeed;
+                this.scrollSpeed = this.highScrollSpeed;
+                this.isInHighSpeed = true;
+            } else {
+                this.scrollSpeed = 1.5;
+                this.isInHighSpeed = false;
+            }
 
             // Visual notification
             console.log(`Entering Area ${this.currentArea}: ${this.currentConfig.name}`);

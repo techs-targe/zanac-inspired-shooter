@@ -1016,9 +1016,9 @@ class SupplyBase {
     constructor(x, y, scrollSpeed = 1.5) {
         this.x = x;
         this.y = y;
-        this.size = 20;
-        this.hp = 100;
-        this.maxHp = 100;
+        this.size = 12; // Smaller size (was 20)
+        this.hp = 20; // Lower HP (was 100)
+        this.maxHp = 20;
         this.scoreValue = 500;
         this.isGround = true;
         this.isSupplyBase = true; // Flag to identify as supply base
@@ -1048,39 +1048,38 @@ class SupplyBase {
         push();
         translate(this.x, this.y);
 
-        // Base structure - rectangular with antenna
+        // Dome structure
         noStroke();
 
-        // Main body
+        // Base
+        fill(80, 120, 160);
+        ellipse(0, this.size * 0.3, this.size * 2, this.size * 0.8);
+
+        // Main dome
         fill(100, 150, 200);
-        rect(-this.size * 0.8, -this.size * 0.6, this.size * 1.6, this.size * 1.2);
+        ellipse(0, 0, this.size * 2, this.size * 2);
 
-        // Top section
-        fill(120, 170, 220);
-        rect(-this.size * 0.5, -this.size, this.size, this.size * 0.4);
+        // Highlight
+        fill(150, 200, 250, 180);
+        ellipse(-this.size * 0.3, -this.size * 0.3, this.size * 1.2, this.size * 1.2);
 
-        // Antenna
+        // Small antenna on top
         stroke(150, 200, 255);
-        strokeWeight(2);
-        line(0, -this.size, 0, -this.size - 8);
+        strokeWeight(1);
+        line(0, -this.size, 0, -this.size - 4);
         noStroke();
         fill(255, 100, 100);
-        ellipse(0, -this.size - 8, 4, 4);
-
-        // Window/lights
-        fill(255, 255, 100, 150);
-        ellipse(-this.size * 0.4, -this.size * 0.3, 5, 5);
-        ellipse(this.size * 0.4, -this.size * 0.3, 5, 5);
+        ellipse(0, -this.size - 4, 3, 3);
 
         // HP bar
         if (this.hp > 0 && this.maxHp > 0) {
             fill(255, 100, 100);
             rectMode(CENTER);
-            rect(0, this.size + 5, this.size * 1.5, 3);
+            rect(0, this.size + 5, this.size * 1.5, 2);
 
             fill(100, 255, 100);
             let hpWidth = map(this.hp, 0, this.maxHp, 0, this.size * 1.5);
-            rect(-(this.size * 1.5 - hpWidth) / 2, this.size + 5, hpWidth, 3);
+            rect(-(this.size * 1.5 - hpWidth) / 2, this.size + 5, hpWidth, 2);
         }
 
         pop();
@@ -1088,5 +1087,169 @@ class SupplyBase {
 
     isOffscreen() {
         return this.y > GAME_HEIGHT + 50;
+    }
+}
+
+// PowerBox (パワーチップボックス)
+// Blue box enemies that form triangle formations (1 leader, 2 followers)
+// One box contains a P-item. Special collision: touching untouched P-item box gives +5 levels without damage
+class PowerBox {
+    constructor(x, y, hasPowerChip = false, formation = null) {
+        this.x = x;
+        this.y = y;
+        this.size = 10;
+        this.hp = 1;
+        this.maxHp = 1;
+        this.scoreValue = 100;
+        this.hasPowerChip = hasPowerChip; // Does this box contain a power chip?
+        this.formation = formation; // Reference to parent formation
+        this.speed = 1.0; // Slow movement
+        this.color = color(50, 100, 255); // Blue
+        this.glowPhase = 0; // For pulsing glow effect
+        this.canShoot = false;
+    }
+
+    update() {
+        this.y += this.speed;
+        this.glowPhase += 0.1;
+    }
+
+    shoot() {
+        // PowerBoxes don't shoot
+    }
+
+    hit(damage) {
+        // Mark formation as touched when any box is hit
+        if (this.formation) {
+            this.formation.touched = true;
+        }
+
+        this.hp -= damage;
+        if (this.hp <= 0) {
+            this.onDestroyed();
+        }
+    }
+
+    onDestroyed() {
+        // Drop power chip if this box contained one
+        if (this.hasPowerChip) {
+            powerUps.push(new PowerChip(this.x, this.y));
+        }
+    }
+
+    // Check collision with player - special handling for untouched formations
+    checkPlayerCollision(player) {
+        if (!player.alive || player.invulnerable || player.respawning) return false;
+
+        let distance = dist(this.x, this.y, player.x, player.y);
+        if (distance < this.size + player.size) {
+            // Collision detected
+            if (this.hasPowerChip && this.formation && !this.formation.touched) {
+                // Special bonus: +5 main weapon levels without damage
+                player.mainWeaponLevel = min(player.mainWeaponLevel + 5, 30);
+
+                // Visual feedback
+                for (let i = 0; i < 20; i++) {
+                    particles.push(new Particle(this.x, this.y, 10, color(255, 255, 100)));
+                }
+
+                // Mark formation as touched and destroy this box
+                if (this.formation) {
+                    this.formation.touched = true;
+                }
+                this.hp = 0;
+                return true; // Collision handled, box destroyed
+            } else {
+                // Normal collision - damage player
+                player.hit();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    draw() {
+        push();
+        translate(this.x, this.y);
+
+        // Glow effect (brighter for P-item box)
+        if (this.hasPowerChip) {
+            let glowAlpha = 100 + sin(this.glowPhase) * 50;
+            fill(255, 255, 150, glowAlpha);
+            noStroke();
+            rect(-this.size * 1.3, -this.size * 1.3, this.size * 2.6, this.size * 2.6);
+        }
+
+        // Main box
+        fill(50, 100, 255);
+        stroke(100, 150, 255);
+        strokeWeight(2);
+        rectMode(CENTER);
+        rect(0, 0, this.size * 2, this.size * 2);
+
+        // Inner detail
+        fill(80, 130, 255);
+        rect(0, 0, this.size * 1.4, this.size * 1.4);
+
+        // Highlight if has power chip
+        if (this.hasPowerChip) {
+            fill(255, 255, 200, 150);
+            ellipse(-this.size * 0.3, -this.size * 0.3, this.size * 0.8, this.size * 0.8);
+        }
+
+        pop();
+    }
+
+    isOffscreen() {
+        return this.y > GAME_HEIGHT + 50;
+    }
+}
+
+// PowerBox Formation Manager
+// Manages a triangle formation of 3 PowerBoxes (1 leader, 2 followers)
+class PowerBoxFormation {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.boxes = [];
+        this.touched = false; // Has any box been attacked or touched?
+        this.powerChipIndex = int(random(0, 3)); // Which box has the power chip (0, 1, or 2)
+
+        // Create formation: triangle shape
+        // Leader in front (top)
+        this.boxes.push(new PowerBox(x, y, this.powerChipIndex === 0, this));
+
+        // Two followers behind (bottom left and right)
+        this.boxes.push(new PowerBox(x - 20, y + 30, this.powerChipIndex === 1, this));
+        this.boxes.push(new PowerBox(x + 20, y + 30, this.powerChipIndex === 2, this));
+    }
+
+    update() {
+        // Update all boxes
+        for (let box of this.boxes) {
+            box.update();
+        }
+    }
+
+    draw() {
+        // Draw all boxes
+        for (let box of this.boxes) {
+            box.draw();
+        }
+    }
+
+    // Get all boxes in this formation
+    getBoxes() {
+        return this.boxes;
+    }
+
+    // Check if all boxes are destroyed
+    allDestroyed() {
+        return this.boxes.every(box => box.hp <= 0);
+    }
+
+    // Check if any box is offscreen
+    isOffscreen() {
+        return this.boxes.every(box => box.isOffscreen());
     }
 }

@@ -286,6 +286,11 @@ function drawGame() {
         groundEnemy.draw();
     }
 
+    // Draw PowerBox formations
+    if (areaManager) {
+        areaManager.drawPowerBoxFormations();
+    }
+
     for (let powerUp of powerUps) {
         powerUp.draw();
     }
@@ -623,6 +628,41 @@ function checkCollisions() {
                 }
             }
         }
+
+        // Bullets vs PowerBox formations
+        if (bullets[i] && areaManager && areaManager.powerBoxFormations) {
+            for (let formation of areaManager.powerBoxFormations) {
+                for (let box of formation.getBoxes()) {
+                    if (box.hp > 0 && bullets[i].hits && bullets[i].hits(box)) {
+                        // Mark formation as touched when hit by bullet
+                        formation.touched = true;
+
+                        box.hp -= bullets[i].damage;
+
+                        // Special handling for vibrating bullet
+                        if (bullets[i] instanceof VibratingBullet) {
+                            if (bullets[i].onHit()) {
+                                bullets.splice(i, 1);
+                                bulletRemoved = true;
+                            }
+                        } else if (!bullets[i].penetrating) {
+                            bullets.splice(i, 1);
+                            bulletRemoved = true;
+                        }
+
+                        // PowerBox destroyed
+                        if (box.hp <= 0) {
+                            addScore(box.scoreValue);
+                            createExplosion(box.x, box.y, box.size);
+                            box.onDestroyed();
+                        }
+
+                        if (bulletRemoved) break;
+                    }
+                }
+                if (bulletRemoved) break;
+            }
+        }
     }
 
     // Enemy bullets vs player
@@ -659,6 +699,21 @@ function checkCollisions() {
                     groundEnemies.splice(i, 1);
                     player.hit();
                     enemyManager.onPlayerHit();
+                }
+            }
+        }
+
+        // PowerBox vs player (special collision handling)
+        if (areaManager && areaManager.powerBoxFormations) {
+            for (let formation of areaManager.powerBoxFormations) {
+                for (let box of formation.getBoxes()) {
+                    if (box.hp > 0) {
+                        // Use PowerBox's special collision method
+                        if (box.checkPlayerCollision(player)) {
+                            // Collision was handled by PowerBox (either bonus or damage)
+                            // Note: checkPlayerCollision handles all logic including damage/bonus
+                        }
+                    }
                 }
             }
         }

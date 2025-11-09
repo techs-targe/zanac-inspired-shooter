@@ -8,6 +8,9 @@ class Player {
         this.alive = true;
         this.invulnerable = false;
         this.invulnerableTime = 0;
+        this.respawning = false;
+        this.respawnY = GAME_HEIGHT + 20; // Start below screen
+        this.respawnTargetY = GAME_HEIGHT - 80;
 
         // Main weapon system (power chips)
         this.mainWeaponLevel = 0; // 0-30: progressive power-up stages
@@ -35,6 +38,23 @@ class Player {
 
     update() {
         if (!this.alive) return; // Don't update if dead
+
+        // Handle respawn animation
+        if (this.respawning) {
+            // Rise up from bottom of screen
+            if (this.respawnY > this.respawnTargetY) {
+                this.respawnY -= 3; // Rise up speed
+                this.y = this.respawnY;
+            } else {
+                // Respawn complete
+                this.respawning = false;
+                this.y = this.respawnTargetY;
+                // 5 seconds invincibility after respawn
+                this.invulnerable = true;
+                this.invulnerableTime = 300; // 5 seconds
+            }
+            return; // Don't process other updates while respawning
+        }
 
         // Handle invulnerability frames
         if (this.invulnerable) {
@@ -383,9 +403,9 @@ class Player {
             particles.push(new Particle(this.x, this.y, 8, color(255, 255, 100)));
         }
 
-        // Invincibility
+        // Invincibility for 2 seconds
         this.invulnerable = true;
-        this.invulnerableTime = 60; // 1 second
+        this.invulnerableTime = 120; // 2 seconds
     }
 
     collectSubWeapon(type) {
@@ -426,9 +446,9 @@ class Player {
             particles.push(new Particle(this.x, this.y, 8, color(100, 255, 100)));
         }
 
-        // Invincibility
+        // Invincibility for 2 seconds
         this.invulnerable = true;
-        this.invulnerableTime = 300; // 5 seconds
+        this.invulnerableTime = 120; // 2 seconds
     }
 
     initSubWeapon(type) {
@@ -502,31 +522,44 @@ class Player {
     }
 
     hit() {
-        if (this.invulnerable) return;
+        if (this.invulnerable || this.respawning) return;
 
         this.lives--;
         if (this.lives <= 0) {
             this.alive = false;
             this.die();
         } else {
-            // Invulnerability period
-            this.invulnerable = true;
-            this.invulnerableTime = 120; // 2 seconds
-
-            // Lose main weapon level
-            this.mainWeaponLevel = max(0, this.mainWeaponLevel - 1);
-
-            // Lose sub weapon level
-            this.subWeaponLevel = max(0, this.subWeaponLevel - 1);
-            if (this.subWeaponLevel === 0) {
-                this.resetToWeapon0();
-            } else {
-                this.initSubWeapon(this.subWeaponType);
+            // Death explosion at current position
+            createExplosion(this.x, this.y, this.size * 3);
+            for (let i = 0; i < 20; i++) {
+                particles.push(new Particle(this.x, this.y, 15, color(255, 100, 100)));
             }
 
-            // Visual feedback
-            createExplosion(this.x, this.y, this.size);
+            // Reset weapons and levels on death
+            this.mainWeaponLevel = 0;
+            this.subWeaponType = 0;
+            this.subWeaponLevel = 0;
+            this.subWeaponActive = null;
+
+            // Remove all boomerang bullets (weapon 5)
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                if (bullets[i] instanceof BoomerangBullet) {
+                    bullets.splice(i, 1);
+                }
+            }
+
+            this.initSubWeapon(0);
+
+            // Start respawn sequence
+            this.respawn();
         }
+    }
+
+    respawn() {
+        this.respawning = true;
+        this.x = GAME_WIDTH / 2;
+        this.respawnY = GAME_HEIGHT + 20; // Start below screen
+        this.y = this.respawnY;
     }
 
     die() {
