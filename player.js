@@ -165,12 +165,13 @@ class Player {
 
         this.subFireCooldown = this.subFireRate;
 
+        let fired = true; // Track if weapon actually fired
         switch(this.subWeaponType) {
             case 0: // All-range (全方位弾)
                 this.shootWeapon0();
                 break;
             case 1: // Straight Crusher (貫通弾)
-                this.shootWeapon1();
+                fired = this.shootWeapon1();
                 break;
             case 2: // Field Shutter (防御幕)
                 this.shootWeapon2();
@@ -185,15 +186,15 @@ class Player {
                 this.shootWeapon5();
                 break;
             case 6: // Plasma Flash (反応弾)
-                this.shootWeapon6();
+                fired = this.shootWeapon6();
                 break;
             case 7: // High Speed (高速速射弾)
                 this.shootWeapon7();
                 break;
         }
 
-        // Consume ammo if applicable
-        if (this.subWeaponAmmo > 0) {
+        // Consume ammo if applicable and weapon actually fired
+        if (fired && this.subWeaponAmmo > 0) {
             this.subWeaponAmmo--;
         }
     }
@@ -235,7 +236,7 @@ class Player {
     shootWeapon1() {
         // Penetrating shot - only one at a time
         let existingPenetrating = bullets.find(b => b instanceof PenetratingBullet && b.isPlayerBullet);
-        if (existingPenetrating) return; // Can't fire until current bullet is off screen
+        if (existingPenetrating) return false; // Can't fire until current bullet is off screen
 
         // Slower speed
         let speed = 4 + this.subWeaponLevel;
@@ -251,6 +252,7 @@ class Player {
             // Giant penetrating bullet
             bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -speed, 20));
         }
+        return true; // Bullet fired successfully
     }
 
     shootWeapon2() {
@@ -303,7 +305,12 @@ class Player {
 
     shootWeapon6() {
         // Plasma flash - rapid-fire, super slow, damages all on-screen enemies
+        // Only one plasma bullet at a time
+        let existingPlasma = bullets.find(b => b instanceof PlasmaBullet && b.isPlayerBullet);
+        if (existingPlasma) return false; // Can't fire until current bullet is off screen
+
         bullets.push(new PlasmaBullet(this.x, this.y - this.size, 0, -2)); // Super slow speed
+        return true; // Bullet fired successfully
     }
 
     shootWeapon7() {
@@ -331,9 +338,9 @@ class Player {
             bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 16, 0.2));
         }
 
-        // Time only decreases while shooting
+        // Time decreases by 1 second (60 frames) per shot
         if (this.subWeaponTime > 0) {
-            this.subWeaponTime -= 2;
+            this.subWeaponTime -= 60;
             if (this.subWeaponTime <= 0) {
                 this.resetToWeapon0();
             }

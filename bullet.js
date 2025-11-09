@@ -780,6 +780,11 @@ class RotatingWeapon {
                 let by = this.player.y + sin(a) * this.radius;
                 let d = dist(bx, by, enemies[i].x, enemies[i].y);
                 if (d < 15 + enemies[i].size) {
+                    // If it's a boss, deflect and deactivate weapon
+                    if (enemies[i].isBoss) {
+                        this.deflectFromBoss();
+                        return; // Stop processing this weapon
+                    }
                     // DAMAGE ENEMY - but don't go below 0
                     if (enemies[i].hp > 0 && !enemies[i].markedForDeletion) {
                         enemies[i].hp -= 3.0;
@@ -841,6 +846,15 @@ class RotatingWeapon {
         }
 
         pop();
+    }
+
+    deflectFromBoss() {
+        // When hitting boss, create explosion effect and deactivate weapon
+        createExplosion(this.player.x, this.player.y, 30);
+        // Deactivate weapon by setting player's subWeaponActive to null
+        this.player.subWeaponActive = null;
+        // Reset to cooldown so player can re-activate immediately by pressing Z
+        this.player.subFireCooldown = 0;
     }
 
     isDead() {
