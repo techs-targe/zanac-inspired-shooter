@@ -31,9 +31,7 @@ let gameTime = 0;
 let mainFirePressed = false;
 let subFirePressed = false;
 
-// Debug mode
-let debugMode = false;
-let debugItems = [];
+// Debug mode removed for production
 
 function setup() {
     let canvas = createCanvas(GAME_WIDTH, GAME_HEIGHT);
@@ -86,88 +84,6 @@ function initGame() {
     score = 0;
     scrollOffset = 0;
     gameTime = 0;
-
-    // Initialize debug items if in debug mode
-    if (debugMode) {
-        initDebugItems();
-    }
-}
-
-function initDebugItems() {
-    debugItems = [];
-
-    // Create all power-up types: P, 0-7
-    let types = ['P', '0', '1', '2', '3', '4', '5', '6', '7'];
-    let spacing = 50;
-    let startX = 30;
-
-    for (let i = 0; i < types.length; i++) {
-        let x = startX + i * spacing;
-        let y = -50 - i * 80; // Stagger starting positions
-
-        if (types[i] === 'P') {
-            debugItems.push({
-                type: 'power',
-                item: new PowerChip(x, y),
-                x: x,
-                index: i
-            });
-        } else {
-            let weaponNum = parseInt(types[i]);
-            debugItems.push({
-                type: 'weapon',
-                item: new SubWeapon(x, y, weaponNum),
-                x: x,
-                index: i
-            });
-        }
-    }
-}
-
-function updateDebugItems() {
-    if (!debugMode) return;
-
-    for (let i = debugItems.length - 1; i >= 0; i--) {
-        let debugItem = debugItems[i];
-        debugItem.item.y += 2; // Move down
-
-        // Reset if off screen
-        if (debugItem.item.y > GAME_HEIGHT + 50) {
-            debugItem.item.y = -50;
-        }
-
-        // Check collection by player
-        if (player && player.alive) {
-            let d = dist(player.x, player.y, debugItem.item.x, debugItem.item.y);
-            if (d < player.size + 15) {
-                // Collect the item
-                if (debugItem.type === 'power') {
-                    player.collectPowerChip();
-                } else {
-                    player.collectSubWeapon(debugItem.item.type);
-                }
-
-                // Reset item to top
-                debugItem.item.y = -50;
-            }
-        }
-    }
-}
-
-function drawDebugItems() {
-    if (!debugMode) return;
-
-    for (let debugItem of debugItems) {
-        debugItem.item.draw();
-    }
-
-    // Draw debug mode indicator
-    push();
-    fill(255, 255, 0);
-    textSize(14);
-    textAlign(LEFT, TOP);
-    text('DEBUG MODE (D to toggle)', 10, 10);
-    pop();
 }
 
 function updateGame() {
@@ -342,9 +258,6 @@ function updateGame() {
             }
         }
 
-        // Update debug items
-        updateDebugItems();
-
         // Collision detection
         checkCollisions();
     } catch (e) {
@@ -383,9 +296,6 @@ function drawGame() {
     if (player.alive) {
         player.draw();
     }
-
-    // Draw debug items
-    drawDebugItems();
 
     // Draw HUD
     drawHUD();
@@ -773,12 +683,9 @@ function checkCollisions() {
 
 function addScore(points) {
     score += points;
-    // Don't record high score in debug mode
-    if (!debugMode) {
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('znk_highscore', highScore);
-        }
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('znk_highscore', highScore);
     }
     enemyManager.onScoreGained(points);
 }
@@ -808,18 +715,6 @@ function keyPressed() {
         }
     }
 
-    // Toggle debug mode with D key
-    if (key === 'd' || key === 'D') {
-        debugMode = !debugMode;
-        if (debugMode) {
-            initDebugItems();
-            // Set player lives to 20 in debug mode
-            if (player) {
-                player.lives = 20;
-                player.alive = true;
-            }
-        } else {
-            debugItems = [];
-        }
-    }
+    // Debug mode removed for production
 }
+
