@@ -17,7 +17,8 @@ class EnemyManager {
         this.minSpawnInterval = 20;
 
         // Enemy type probabilities (adjusted by difficulty)
-        this.enemyTypes = ['basic', 'shooter', 'weaver', 'tank', 'fast', 'spiral', 'bomber'];
+        this.enemyTypes = ['basic', 'shooter', 'weaver', 'tank', 'fast', 'spiral', 'bomber',
+                          'charger', 'tracker', 'bouncer', 'divider', 'spawner'];
 
         // Wave system
         this.waveNumber = 0;
@@ -119,35 +120,54 @@ class EnemyManager {
 
         if (diff < 1.5) {
             // Early game - mostly basic enemies
-            if (rand < 0.5) return 'basic';
-            if (rand < 0.75) return 'weaver';
-            if (rand < 0.9) return 'shooter';
-            return 'fast';
+            if (rand < 0.45) return 'basic';
+            if (rand < 0.7) return 'weaver';
+            if (rand < 0.85) return 'shooter';
+            if (rand < 0.95) return 'fast';
+            return 'tracker';
         } else if (diff < 2.5) {
             // Mid game - more variety
-            if (rand < 0.3) return 'basic';
-            if (rand < 0.5) return 'shooter';
-            if (rand < 0.65) return 'weaver';
-            if (rand < 0.8) return 'fast';
-            if (rand < 0.9) return 'spiral';
+            if (rand < 0.25) return 'basic';
+            if (rand < 0.42) return 'shooter';
+            if (rand < 0.57) return 'weaver';
+            if (rand < 0.7) return 'fast';
+            if (rand < 0.82) return 'spiral';
+            if (rand < 0.9) return 'tracker';
+            if (rand < 0.96) return 'bouncer';
             return 'tank';
         } else if (diff < 3.5) {
             // Late game - tougher enemies
-            if (rand < 0.2) return 'basic';
-            if (rand < 0.35) return 'shooter';
-            if (rand < 0.5) return 'weaver';
-            if (rand < 0.65) return 'fast';
-            if (rand < 0.8) return 'spiral';
-            if (rand < 0.9) return 'tank';
+            if (rand < 0.15) return 'basic';
+            if (rand < 0.28) return 'shooter';
+            if (rand < 0.41) return 'weaver';
+            if (rand < 0.54) return 'fast';
+            if (rand < 0.66) return 'spiral';
+            if (rand < 0.76) return 'charger';
+            if (rand < 0.84) return 'tank';
+            if (rand < 0.92) return 'bouncer';
             return 'bomber';
-        } else {
+        } else if (diff < 4.5) {
             // Expert mode - very tough
-            if (rand < 0.15) return 'shooter';
-            if (rand < 0.3) return 'weaver';
-            if (rand < 0.45) return 'fast';
-            if (rand < 0.6) return 'spiral';
-            if (rand < 0.8) return 'tank';
-            return 'bomber';
+            if (rand < 0.12) return 'shooter';
+            if (rand < 0.24) return 'weaver';
+            if (rand < 0.36) return 'fast';
+            if (rand < 0.48) return 'spiral';
+            if (rand < 0.6) return 'charger';
+            if (rand < 0.72) return 'tank';
+            if (rand < 0.82) return 'bomber';
+            if (rand < 0.9) return 'divider';
+            return 'bouncer';
+        } else {
+            // Insane mode - extremely tough
+            if (rand < 0.1) return 'shooter';
+            if (rand < 0.2) return 'fast';
+            if (rand < 0.32) return 'spiral';
+            if (rand < 0.44) return 'charger';
+            if (rand < 0.58) return 'tank';
+            if (rand < 0.7) return 'bomber';
+            if (rand < 0.82) return 'divider';
+            if (rand < 0.92) return 'bouncer';
+            return 'spawner';
         }
     }
 

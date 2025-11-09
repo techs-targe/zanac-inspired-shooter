@@ -15,9 +15,11 @@ const GAME_STATE = {
 let gameState = GAME_STATE.TITLE;
 let player;
 let enemyManager;
+let areaManager;
 let bullets = [];
 let enemyBullets = [];
 let enemies = [];
+let groundEnemies = []; // Ground-based turrets/cores
 let powerUps = [];
 let particles = [];
 let score = 0;
@@ -25,13 +27,22 @@ let highScore = 0;
 let scrollOffset = 0;
 let gameTime = 0;
 
+// Key states for shooting
+let mainFirePressed = false;
+let subFirePressed = false;
+
+// Debug mode
+let debugMode = false;
+let debugItems = [];
+
 function setup() {
     let canvas = createCanvas(GAME_WIDTH, GAME_HEIGHT);
     canvas.parent('gameCanvas');
     frameRate(FPS);
 
-    // Load high score from localStorage
-    highScore = parseInt(localStorage.getItem('znk_highscore')) || 0;
+    // Reset high score to 0
+    highScore = 0;
+    localStorage.setItem('znk_highscore', 0);
 
     initGame();
 }
@@ -51,6 +62,7 @@ function draw() {
             drawGame();
             break;
         case GAME_STATE.GAME_OVER:
+            updateGame(); // Keep game running in background
             drawGame();
             drawGameOver();
             break;
@@ -64,80 +76,282 @@ function draw() {
 function initGame() {
     player = new Player();
     enemyManager = new EnemyManager();
+    areaManager = new AreaManager();
     bullets = [];
     enemyBullets = [];
     enemies = [];
+    groundEnemies = [];
     powerUps = [];
     particles = [];
     score = 0;
     scrollOffset = 0;
     gameTime = 0;
+
+    // Initialize debug items if in debug mode
+    if (debugMode) {
+        initDebugItems();
+    }
+}
+
+function initDebugItems() {
+    debugItems = [];
+
+    // Create all power-up types: P, 0-7
+    let types = ['P', '0', '1', '2', '3', '4', '5', '6', '7'];
+    let spacing = 50;
+    let startX = 30;
+
+    for (let i = 0; i < types.length; i++) {
+        let x = startX + i * spacing;
+        let y = -50 - i * 80; // Stagger starting positions
+
+        if (types[i] === 'P') {
+            debugItems.push({
+                type: 'power',
+                item: new PowerChip(x, y),
+                x: x,
+                index: i
+            });
+        } else {
+            let weaponNum = parseInt(types[i]);
+            debugItems.push({
+                type: 'weapon',
+                item: new SubWeapon(x, y, weaponNum),
+                x: x,
+                index: i
+            });
+        }
+    }
+}
+
+function updateDebugItems() {
+    if (!debugMode) return;
+
+    for (let i = debugItems.length - 1; i >= 0; i--) {
+        let debugItem = debugItems[i];
+        debugItem.item.y += 2; // Move down
+
+        // Reset if off screen
+        if (debugItem.item.y > GAME_HEIGHT + 50) {
+            debugItem.item.y = -50;
+        }
+
+        // Check collection by player
+        if (player && player.alive) {
+            let d = dist(player.x, player.y, debugItem.item.x, debugItem.item.y);
+            if (d < player.size + 15) {
+                // Collect the item
+                if (debugItem.type === 'power') {
+                    player.collectPowerChip();
+                } else {
+                    player.collectSubWeapon(debugItem.item.type);
+                }
+
+                // Reset item to top
+                debugItem.item.y = -50;
+            }
+        }
+    }
+}
+
+function drawDebugItems() {
+    if (!debugMode) return;
+
+    for (let debugItem of debugItems) {
+        debugItem.item.draw();
+    }
+
+    // Draw debug mode indicator
+    push();
+    fill(255, 255, 0);
+    textSize(14);
+    textAlign(LEFT, TOP);
+    text('DEBUG MODE (D to toggle)', 10, 10);
+    pop();
 }
 
 function updateGame() {
-    gameTime++;
-    scrollOffset += 2;
+    try {
+        gameTime++;
+        scrollOffset += 2;
 
-    // Update player
-    player.update();
-    player.handleInput();
-
-    // Auto-shoot
-    if (frameCount % player.fireRate === 0) {
-        player.shoot();
-    }
-
-    // Update bullets
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].update();
-        if (bullets[i].isOffscreen()) {
-            bullets.splice(i, 1);
-        }
-    }
-
-    // Update enemy bullets
-    for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        enemyBullets[i].update();
-        if (enemyBullets[i].isOffscreen()) {
-            enemyBullets.splice(i, 1);
-        }
-    }
-
-    // Update enemies
-    enemyManager.update();
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        enemies[i].update();
-
-        // Check if enemy is offscreen
-        if (enemies[i].isOffscreen()) {
-            enemies.splice(i, 1);
-            continue;
+        // Update player (if alive or game still running)
+        if (player) {
+            player.update();
+            player.handleInput();
         }
 
-        // Enemy shooting
-        if (enemies[i].canShoot && frameCount % enemies[i].shootInterval === 0) {
-            enemies[i].shoot();
+        // Manual shooting
+        if (player && player.alive) {
+            if (keyIsDown(32)) { // SPACE
+                player.shootMain();
+            }
+            if (keyIsDown(90)) { // Z
+                player.shootSub();
+            }
         }
-    }
 
-    // Update powerups
-    for (let i = powerUps.length - 1; i >= 0; i--) {
-        powerUps[i].update();
-        if (powerUps[i].isOffscreen()) {
-            powerUps.splice(i, 1);
+        // Update bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            if (bullets[i]) {
+                bullets[i].update();
+                // Remove if marked for removal (e.g., PlasmaBullet hit enemy bullet)
+                if (bullets[i].shouldRemove) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                if (bullets[i].isOffscreen && bullets[i].isOffscreen()) {
+                    bullets.splice(i, 1);
+                }
+            }
         }
-    }
 
-    // Update particles
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        if (particles[i].isDead()) {
-            particles.splice(i, 1);
+        // Update enemy bullets
+        for (let i = enemyBullets.length - 1; i >= 0; i--) {
+            if (enemyBullets[i]) {
+                enemyBullets[i].update();
+                if (enemyBullets[i].isOffscreen()) {
+                    enemyBullets.splice(i, 1);
+                }
+            }
         }
-    }
 
-    // Collision detection
-    checkCollisions();
+        // Update area system
+        if (areaManager) {
+            areaManager.update();
+            groundEnemies = areaManager.groundEnemies; // Sync ground enemies
+        }
+
+        // Update ground enemies
+        for (let i = groundEnemies.length - 1; i >= 0; i--) {
+            if (groundEnemies[i]) {
+                // Skip if already marked for deletion
+                if (groundEnemies[i].markedForDeletion) {
+                    groundEnemies.splice(i, 1);
+                    continue;
+                }
+
+                groundEnemies[i].update();
+
+                // Check if ground enemy HP is 0 or below (killed by barrier/rotating weapon)
+                if (groundEnemies[i].hp <= 0 && !groundEnemies[i].markedForDeletion) {
+                    groundEnemies[i].markedForDeletion = true;
+
+                    addScore(groundEnemies[i].scoreValue);
+                    createExplosion(groundEnemies[i].x, groundEnemies[i].y, groundEnemies[i].size);
+
+                    // Ground enemies have better drop rates
+                    if (random() < 0.40) {
+                        let dropRoll = random();
+                        if (dropRoll < 0.5) {
+                            powerUps.push(new PowerChip(groundEnemies[i].x, groundEnemies[i].y));
+                        } else {
+                            powerUps.push(new SubWeapon(groundEnemies[i].x, groundEnemies[i].y));
+                        }
+                    }
+
+                    groundEnemies.splice(i, 1);
+                    continue;
+                }
+
+                // Ground enemy shooting
+                if (groundEnemies[i].canShoot && frameCount % groundEnemies[i].shootInterval === 0) {
+                    groundEnemies[i].shoot();
+                }
+            }
+        }
+
+        // Update enemies
+        if (enemyManager) enemyManager.update();
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            if (enemies[i]) {
+                // Skip if already marked for deletion
+                if (enemies[i].markedForDeletion) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                enemies[i].update();
+
+                // Check if enemy HP is 0 or below (killed by barrier/rotating weapon)
+                if (enemies[i].hp <= 0 && !enemies[i].markedForDeletion) {
+                    // Mark immediately to prevent re-processing
+                    enemies[i].markedForDeletion = true;
+
+                    addScore(enemies[i].scoreValue);
+                    createExplosion(enemies[i].x, enemies[i].y, enemies[i].size);
+
+                    // Check if boss defeated
+                    if (enemies[i].isBoss && !areaManager.bossDefeated) {
+                        areaManager.onBossDefeated();
+                        try {
+                            powerUps.push(new SubWeapon(enemies[i].x, enemies[i].y, int(random(0, 8))));
+                        } catch (e) {
+                            console.error("Error creating boss power-up:", e);
+                        }
+                    } else if (!enemies[i].isBoss) {
+                        // Drop powerup chance
+                        if (random() < 0.30) {
+                            let dropRoll = random();
+                            if (dropRoll < 0.45) {
+                                powerUps.push(new PowerChip(enemies[i].x, enemies[i].y));
+                            } else if (dropRoll < 0.95) {
+                                powerUps.push(new SubWeapon(enemies[i].x, enemies[i].y));
+                            } else if (enemies[i].scoreValue >= 80) {
+                                powerUps.push(new OneUpItem(enemies[i].x, enemies[i].y));
+                            }
+                        }
+                    }
+
+                    enemies[i].onDestroyed();
+                    enemies.splice(i, 1);
+                    if (enemyManager) enemyManager.onEnemyDestroyed();
+                    continue;
+                }
+
+                // Check if enemy is offscreen
+                if (enemies[i].isOffscreen()) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                // Enemy shooting
+                if (enemies[i].canShoot && frameCount % enemies[i].shootInterval === 0) {
+                    enemies[i].shoot();
+                }
+            }
+        }
+
+        // Update powerups
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+            if (powerUps[i]) {
+                powerUps[i].update();
+                if (powerUps[i].isOffscreen()) {
+                    powerUps.splice(i, 1);
+                }
+            }
+        }
+
+        // Update particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            if (particles[i]) {
+                particles[i].update();
+                if (particles[i].isDead()) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // Update debug items
+        updateDebugItems();
+
+        // Collision detection
+        checkCollisions();
+    } catch (e) {
+        console.error("Error in updateGame:", e);
+        console.error("Stack trace:", e.stack);
+        // Don't freeze - continue game loop
+    }
 }
 
 function drawGame() {
@@ -154,6 +368,10 @@ function drawGame() {
         enemy.draw();
     }
 
+    for (let groundEnemy of groundEnemies) {
+        groundEnemy.draw();
+    }
+
     for (let powerUp of powerUps) {
         powerUp.draw();
     }
@@ -166,52 +384,71 @@ function drawGame() {
         player.draw();
     }
 
+    // Draw debug items
+    drawDebugItems();
+
     // Draw HUD
     drawHUD();
+
+    // Draw area info
+    areaManager.drawAreaInfo();
 }
 
 function drawBackground() {
-    // Animated star field
-    push();
-    stroke(40, 40, 80);
-    strokeWeight(1);
-    for (let i = 0; i < 50; i++) {
-        let x = (i * 37) % width;
-        let y = ((i * 73 + scrollOffset * (1 + i % 3)) % height);
-        point(x, y);
-    }
-    pop();
-
-    // Grid lines
-    push();
-    stroke(20, 20, 40, 100);
-    strokeWeight(1);
-    let gridSize = 40;
-    for (let i = 0; i < height / gridSize + 2; i++) {
-        let y = (i * gridSize - (scrollOffset % gridSize)) % height;
-        line(0, y, width, y);
-    }
-    pop();
+    // Use area-specific background
+    areaManager.drawBackground();
 }
 
 function drawHUD() {
     push();
     fill(255);
-    textSize(16);
+    textSize(14);
     textAlign(LEFT, TOP);
+
+    // Score
     text(`SCORE: ${score}`, 10, 10);
-    text(`HI-SCORE: ${highScore}`, 10, 30);
-    text(`WEAPON: ${player.weaponType}`, 10, 50);
+    text(`HI-SCORE: ${highScore}`, 10, 28);
 
     // Lives
-    text(`LIVES:`, 10, 70);
+    text(`LIVES:`, 10, 46);
     for (let i = 0; i < player.lives; i++) {
-        drawMiniShip(70 + i * 20, 78);
+        drawMiniShip(70 + i * 18, 53);
+    }
+
+    // Main weapon level
+    text(`MAIN: Lv.${player.mainWeaponLevel}`, 10, 64);
+
+    // Sub weapon info
+    let subWeaponName = player.getSubWeaponName();
+    text(`SUB: ${subWeaponName} Lv.${player.subWeaponLevel}`, 10, 82);
+
+    // Sub weapon resource display
+    let resourceY = 100;
+    if (player.subWeaponAmmo > 0) {
+        fill(100, 255, 100);
+        text(`AMMO: ${player.subWeaponAmmo}`, 10, resourceY);
+    } else if (player.subWeaponTime > 0) {
+        fill(255, 255, 100);
+        let seconds = (player.subWeaponTime / 60).toFixed(1);
+        text(`TIME: ${seconds}s`, 10, resourceY);
+    } else if (player.subWeaponDurability > 0 && player.subWeaponType !== 2) {
+        // Don't show for barrier (shows on screen)
+        fill(255, 150, 100);
+        text(`DUR: ${player.subWeaponDurability}`, 10, resourceY);
     }
 
     // Difficulty indicator (ALG level)
     textAlign(RIGHT, TOP);
-    text(`DIFFICULTY: ${enemyManager.difficultyLevel.toFixed(1)}`, width - 10, 10);
+    fill(255, 200, 100);
+    text(`DIFFICULTY:`, width - 10, 10);
+    text(`${enemyManager.difficultyLevel.toFixed(1)}`, width - 10, 28);
+
+    // Controls hint
+    textAlign(CENTER, TOP);
+    fill(150);
+    textSize(10);
+    text('SPACE: Main  Z: Sub  P: Pause', width / 2, height - 15);
+
     pop();
 }
 
@@ -219,38 +456,54 @@ function drawMiniShip(x, y) {
     push();
     fill(100, 200, 255);
     noStroke();
-    triangle(x, y - 5, x - 4, y + 5, x + 4, y + 5);
+    triangle(x, y - 4, x - 3, y + 3, x + 3, y + 3);
     pop();
 }
 
 function drawTitle() {
     push();
     fill(100, 200, 255);
-    textSize(48);
+    textSize(56);
     textAlign(CENTER, CENTER);
-    text('ZNK', width / 2, height / 3);
+    text('ZNK', width / 2, height / 3 - 20);
 
     fill(255);
-    textSize(20);
-    text('ZANAC-INSPIRED SHOOTER', width / 2, height / 3 + 60);
-
-    textSize(16);
-    fill(200);
-    text('Press SPACE or ENTER to Start', width / 2, height / 2 + 40);
+    textSize(18);
+    text('ZANAC-INSPIRED SHOOTER', width / 2, height / 3 + 40);
 
     textSize(14);
-    fill(150);
-    text('Arrow Keys: Move', width / 2, height / 2 + 100);
-    text('Auto-fire enabled', width / 2, height / 2 + 120);
-    text('Collect numbered items (0-7) for weapons', width / 2, height / 2 + 140);
+    fill(200);
+    text('Press SPACE or ENTER to Start', width / 2, height / 2 + 20);
 
+    // Controls
+    textSize(13);
+    fill(180);
+    text('CONTROLS:', width / 2, height / 2 + 60);
     textSize(12);
-    fill(100, 255, 100);
-    text('Featuring ALG System:', width / 2, height / 2 + 180);
-    text('Game difficulty adapts to your skill!', width / 2, height / 2 + 200);
+    text('Arrow Keys / WASD: Move', width / 2, height / 2 + 80);
+    text('SPACE: Main Weapon (manual fire)', width / 2, height / 2 + 98);
+    text('Z: Sub Weapon (manual fire)', width / 2, height / 2 + 116);
+    text('P: Pause', width / 2, height / 2 + 134);
+
+    // Weapon system explanation
+    textSize(11);
+    fill(150, 255, 150);
+    text('Collect Power Chips (P) for main weapon', width / 2, height / 2 + 160);
+    text('Collect Sub Weapons (0-7) with unique abilities', width / 2, height / 2 + 176);
+
+    // ALG system
+    textSize(11);
+    fill(255, 200, 100);
+    text('Featuring ALG System:', width / 2, height / 2 + 202);
+    text('Difficulty adapts to your skill!', width / 2, height / 2 + 218);
+
+    // Debug mode
+    textSize(11);
+    fill(100, 255, 255);
+    text('Press D for Debug Mode (all power-ups)', width / 2, height / 2 + 244);
 
     if (highScore > 0) {
-        textSize(16);
+        textSize(15);
         fill(255, 255, 100);
         text(`High Score: ${highScore}`, width / 2, height - 50);
     }
@@ -286,40 +539,178 @@ function drawGameOver() {
 function drawPaused() {
     push();
     fill(0, 0, 0, 200);
-    rect(0, height / 2 - 50, width, 100);
+    rect(0, height / 2 - 80, width, 160);
 
     fill(255);
     textSize(32);
     textAlign(CENTER, CENTER);
-    text('PAUSED', width / 2, height / 2);
+    text('PAUSED', width / 2, height / 2 - 30);
 
     textSize(14);
-    text('Press P to Resume', width / 2, height / 2 + 30);
+    text('Press P to Resume', width / 2, height / 2 + 10);
+
+    // Show weapon info
+    textSize(12);
+    fill(200);
+    text(`Main Weapon: Level ${player.mainWeaponLevel}`, width / 2, height / 2 + 40);
+    text(`Sub Weapon: ${player.getSubWeaponName()} Level ${player.subWeaponLevel}`, width / 2, height / 2 + 58);
+
     pop();
 }
 
 function checkCollisions() {
     // Player bullets vs enemies
     for (let i = bullets.length - 1; i >= 0; i--) {
-        for (let j = enemies.length - 1; j >= 0; j--) {
-            if (bullets[i].hits(enemies[j])) {
-                enemies[j].hp -= bullets[i].damage;
-                bullets.splice(i, 1);
+        let bulletRemoved = false;
 
-                if (enemies[j].hp <= 0) {
-                    // Enemy destroyed
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            if (bullets[i] && bullets[i].hits && bullets[i].hits(enemies[j])) {
+                // Skip if already marked for deletion
+                if (enemies[j].markedForDeletion) {
+                    continue;
+                }
+
+                // Special handling for boss hits (weapons 1, 4, 5 deflect)
+                if (enemies[j].isBoss) {
+                    enemies[j].hp -= bullets[i].damage;
+
+                    // Weapons 1, 4, 5 (boomerang) deflect from boss
+                    if (bullets[i] instanceof PenetratingBullet ||
+                        bullets[i] instanceof VibratingBullet ||
+                        bullets[i] instanceof StraightLaserBullet ||
+                        bullets[i] instanceof BoomerangBullet) {
+                        bullets[i].deflectFromBoss();
+                        // Don't remove bullet, it bounces away
+                        break;
+                    }
+                    // Other bullets hit normally
+                    else if (!bullets[i].penetrating) {
+                        bullets.splice(i, 1);
+                        bulletRemoved = true;
+                    }
+                } else {
+                    // Normal enemy hit
+                    enemies[j].hp -= bullets[i].damage;
+
+                    // Special handling for vibrating bullet (weapon 4)
+                    if (bullets[i] instanceof VibratingBullet) {
+                        if (bullets[i].onHit()) {
+                            // Durability depleted
+                            bullets.splice(i, 1);
+                            bulletRemoved = true;
+                        }
+                    }
+                    // Remove bullet unless it's penetrating
+                    else if (!bullets[i].penetrating) {
+                        bullets.splice(i, 1);
+                        bulletRemoved = true;
+                    }
+                }
+
+                // Enemy destroyed - check if HP <= 0 and not already marked
+                if (enemies[j].hp <= 0 && !enemies[j].markedForDeletion) {
+                    enemies[j].markedForDeletion = true;
+
                     addScore(enemies[j].scoreValue);
                     createExplosion(enemies[j].x, enemies[j].y, enemies[j].size);
 
-                    // Drop powerup chance
-                    if (random() < 0.15) {
-                        powerUps.push(new PowerUp(enemies[j].x, enemies[j].y));
+                    // Check if boss defeated
+                    if (enemies[j].isBoss && !areaManager.bossDefeated) {
+                        // Only call once - guard with bossDefeated flag
+                        areaManager.onBossDefeated();
+                        // Boss drops guaranteed power-up
+                        try {
+                            powerUps.push(new SubWeapon(enemies[j].x, enemies[j].y, int(random(0, 8))));
+                        } catch (e) {
+                            console.error("Error creating boss power-up:", e);
+                        }
+                    } else if (!enemies[j].isBoss) {
+                        // Drop powerup chance (30% for any, then split between types)
+                        if (random() < 0.30) {
+                            // 45% power chip, 50% sub weapon, 5% 1UP (for high-value enemies)
+                            let dropRoll = random();
+                            if (dropRoll < 0.45) {
+                                powerUps.push(new PowerChip(enemies[j].x, enemies[j].y));
+                            } else if (dropRoll < 0.95) {
+                                powerUps.push(new SubWeapon(enemies[j].x, enemies[j].y));
+                            } else if (enemies[j].scoreValue >= 80) {
+                                // Only high-value enemies drop 1UP
+                                powerUps.push(new OneUpItem(enemies[j].x, enemies[j].y));
+                            }
+                        }
                     }
 
+                    // Call onDestroyed for special enemy behaviors (e.g., divider splits)
+                    enemies[j].onDestroyed();
                     enemies.splice(j, 1);
                     enemyManager.onEnemyDestroyed();
                 }
-                break;
+
+                if (bulletRemoved) break;
+            }
+        }
+
+        // Bullets vs 1UP items (shooting makes them red)
+        if (bullets[i]) {
+            for (let j = powerUps.length - 1; j >= 0; j--) {
+                if (powerUps[j] instanceof OneUpItem) {
+                    let d = dist(bullets[i].x, bullets[i].y, powerUps[j].x, powerUps[j].y);
+                    if (d < bullets[i].size + powerUps[j].size) {
+                        powerUps[j].hit();
+                        if (!bullets[i].penetrating) {
+                            bullets.splice(i, 1);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Bullets vs ground enemies
+        if (bullets[i]) {
+            for (let j = groundEnemies.length - 1; j >= 0; j--) {
+                if (bullets[i].hits && bullets[i].hits(groundEnemies[j])) {
+                    // Skip if already marked for deletion
+                    if (groundEnemies[j].markedForDeletion) {
+                        continue;
+                    }
+
+                    groundEnemies[j].hp -= bullets[i].damage;
+
+                    // Special handling for vibrating bullet (weapon 4)
+                    if (bullets[i] instanceof VibratingBullet) {
+                        if (bullets[i].onHit()) {
+                            bullets.splice(i, 1);
+                            bulletRemoved = true;
+                        }
+                    }
+                    else if (!bullets[i].penetrating) {
+                        bullets.splice(i, 1);
+                        bulletRemoved = true;
+                    }
+
+                    // Ground enemy destroyed - HP must be 0 or below and not already marked
+                    if (groundEnemies[j].hp <= 0 && !groundEnemies[j].markedForDeletion) {
+                        groundEnemies[j].markedForDeletion = true;
+
+                        addScore(groundEnemies[j].scoreValue);
+                        createExplosion(groundEnemies[j].x, groundEnemies[j].y, groundEnemies[j].size);
+
+                        // Ground enemies have better drop rates
+                        if (random() < 0.40) {
+                            let dropRoll = random();
+                            if (dropRoll < 0.5) {
+                                powerUps.push(new PowerChip(groundEnemies[j].x, groundEnemies[j].y));
+                            } else {
+                                powerUps.push(new SubWeapon(groundEnemies[j].x, groundEnemies[j].y));
+                            }
+                        }
+
+                        groundEnemies.splice(j, 1);
+                    }
+
+                    if (bulletRemoved) break;
+                }
             }
         }
     }
@@ -340,6 +731,7 @@ function checkCollisions() {
             let d = dist(player.x, player.y, enemies[i].x, enemies[i].y);
             if (d < player.size + enemies[i].size) {
                 createExplosion(enemies[i].x, enemies[i].y, enemies[i].size);
+                enemies[i].onDestroyed();
                 enemies.splice(i, 1);
                 player.hit();
                 enemyManager.onPlayerHit();
@@ -352,8 +744,27 @@ function checkCollisions() {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             let d = dist(player.x, player.y, powerUps[i].x, powerUps[i].y);
             if (d < player.size + powerUps[i].size) {
-                player.collectPowerUp(powerUps[i].type);
-                addScore(100);
+                // Check type
+                if (powerUps[i].type === 'powerchip' || powerUps[i] instanceof PowerChip) {
+                    player.collectPowerChip();
+                    addScore(50);
+                } else if (powerUps[i].type === '1up' || powerUps[i] instanceof OneUpItem) {
+                    // 1UP item
+                    player.lives++;
+                    // Red 1UP gives more score
+                    if (powerUps[i].isRed) {
+                        addScore(10000);
+                    } else {
+                        addScore(5000);
+                    }
+                    // Visual effect
+                    for (let j = 0; j < 30; j++) {
+                        particles.push(new Particle(powerUps[i].x, powerUps[i].y, 15, color(255, 255, 100)));
+                    }
+                } else {
+                    player.collectSubWeapon(powerUps[i].type);
+                    addScore(100);
+                }
                 powerUps.splice(i, 1);
             }
         }
@@ -362,9 +773,12 @@ function checkCollisions() {
 
 function addScore(points) {
     score += points;
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('znk_highscore', highScore);
+    // Don't record high score in debug mode
+    if (!debugMode) {
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('znk_highscore', highScore);
+        }
     }
     enemyManager.onScoreGained(points);
 }
@@ -391,6 +805,21 @@ function keyPressed() {
             gameState = GAME_STATE.PAUSED;
         } else if (gameState === GAME_STATE.PAUSED) {
             gameState = GAME_STATE.PLAYING;
+        }
+    }
+
+    // Toggle debug mode with D key
+    if (key === 'd' || key === 'D') {
+        debugMode = !debugMode;
+        if (debugMode) {
+            initDebugItems();
+            // Set player lives to 20 in debug mode
+            if (player) {
+                player.lives = 20;
+                player.alive = true;
+            }
+        } else {
+            debugItems = [];
         }
     }
 }
