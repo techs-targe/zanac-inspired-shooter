@@ -10,6 +10,7 @@ class AreaManager {
         this.bossDefeatedTimer = 0; // Frames to wait after boss defeat
         this.groundEnemies = [];
         this.groundEnemySpawnPoints = [];
+        this.aiaiSpawned = false; // Track if AI-AI has spawned in this area
 
         // Area configurations
         this.areaConfigs = this.initAreaConfigs();
@@ -36,8 +37,7 @@ class AreaManager {
                 bossType: 'organic',
                 difficulty: 1.2,
                 groundEnemyFreq: 0.18, // Increased from 0.03
-                specialFeature: 'trees',
-                hasAiai: true
+                specialFeature: 'trees'
             },
             { // Area 3 - Ocean/Coast
                 number: 3,
@@ -170,6 +170,12 @@ class AreaManager {
 
         this.areaProgress++;
 
+        // Spawn AI-AI at midpoint (progress = 1500) in specific areas
+        if (this.areaProgress === 1500 && this.currentConfig.hasAiai && !this.aiaiSpawned) {
+            this.spawnAIAI();
+            this.aiaiSpawned = true;
+        }
+
         // Spawn ground enemies based on area configuration - increased frequency
         if (frameCount % 60 === 0 && random() < this.currentConfig.groundEnemyFreq) {
             this.spawnGroundEnemy();
@@ -189,6 +195,13 @@ class AreaManager {
         let level = this.currentArea;
 
         this.groundEnemies.push(new GroundEnemy(x, y, type, level, targetY));
+    }
+
+    spawnAIAI() {
+        // Spawn special AI-AI enemy at center of screen
+        let x = GAME_WIDTH / 2;
+        let y = -40; // Spawn above screen
+        this.groundEnemies.push(new SpecialAIAI(x, y));
     }
 
     spawnBoss() {
@@ -212,6 +225,7 @@ class AreaManager {
             this.bossActive = false;
             this.bossDefeated = false;
             this.bossDefeatedTimer = 0;
+            this.aiaiSpawned = false; // Reset AI-AI spawn flag
             this.groundEnemies = [];
             this.currentConfig = this.areaConfigs[this.currentArea - 1];
 

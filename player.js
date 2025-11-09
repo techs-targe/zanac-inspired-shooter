@@ -10,7 +10,7 @@ class Player {
         this.invulnerableTime = 0;
 
         // Main weapon system (power chips)
-        this.mainWeaponLevel = 0; // 0-5: progressive power-up stages
+        this.mainWeaponLevel = 0; // 0-30: progressive power-up stages
         this.mainFireCooldown = 0;
         this.mainFireRate = 6; // Frames between shots
 
@@ -120,33 +120,43 @@ class Player {
 
         this.mainFireCooldown = this.mainFireRate;
 
+        // Level 30: Thin laser with increased power
+        if (this.mainWeaponLevel === 30) {
+            // Thin laser beam
+            bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -12, 4, 5));
+            return;
+        }
+
         // Main weapon pattern based on level (0-5)
-        switch(this.mainWeaponLevel) {
-            case 0: // Single shot, 2-shot burst
+        // Level 6-29 use the same pattern as level 5
+        let effectiveLevel = min(this.mainWeaponLevel, 5);
+
+        switch(effectiveLevel) {
+            case 0: // Single shot
                 bullets.push(new Bullet(this.x, this.y - this.size, 0, -8, true, 1));
                 break;
 
-            case 1: // Single shot, 3-shot burst
+            case 1: // Single shot
                 bullets.push(new Bullet(this.x, this.y - this.size, 0, -8, true, 1));
                 break;
 
-            case 2: // 2 parallel, 2-shot burst
+            case 2: // 2 parallel
                 bullets.push(new Bullet(this.x - 6, this.y - this.size, 0, -8, true, 1));
                 bullets.push(new Bullet(this.x + 6, this.y - this.size, 0, -8, true, 1));
                 break;
 
-            case 3: // 2 parallel, 3-shot burst
+            case 3: // 2 parallel
                 bullets.push(new Bullet(this.x - 6, this.y - this.size, 0, -8, true, 1));
                 bullets.push(new Bullet(this.x + 6, this.y - this.size, 0, -8, true, 1));
                 break;
 
-            case 4: // 3 parallel, 2-shot burst
+            case 4: // 3 parallel
                 bullets.push(new Bullet(this.x, this.y - this.size, 0, -8, true, 1));
                 bullets.push(new Bullet(this.x - 10, this.y - this.size, 0, -8, true, 1));
                 bullets.push(new Bullet(this.x + 10, this.y - this.size, 0, -8, true, 1));
                 break;
 
-            case 5: // 3 parallel, 3-shot burst (MAX)
+            case 5: // 3 parallel (level 5-29 use this)
                 bullets.push(new Bullet(this.x, this.y - this.size, 0, -8, true, 1));
                 bullets.push(new Bullet(this.x - 10, this.y - this.size, 0, -8, true, 1));
                 bullets.push(new Bullet(this.x + 10, this.y - this.size, 0, -8, true, 1));
@@ -363,8 +373,8 @@ class Player {
     }
 
     collectPowerChip() {
-        // Power up main weapon
-        if (this.mainWeaponLevel < 5) {
+        // Power up main weapon (max level 30)
+        if (this.mainWeaponLevel < 30) {
             this.mainWeaponLevel++;
         }
 
@@ -521,6 +531,14 @@ class Player {
 
     die() {
         createExplosion(this.x, this.y, this.size * 2);
+
+        // Reset weapons and levels on death
+        this.subWeaponType = 0;
+        this.subWeaponLevel = 0;
+        this.mainWeaponLevel = 0;
+        this.subWeaponActive = null;
+        this.initSubWeapon(0);
+
         gameState = GAME_STATE.GAME_OVER;
     }
 

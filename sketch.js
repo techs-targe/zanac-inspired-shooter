@@ -646,6 +646,21 @@ function checkCollisions() {
                 enemyManager.onPlayerHit();
             }
         }
+
+        // Ground enemies vs player (collision) - AI-AI doesn't damage player
+        for (let i = groundEnemies.length - 1; i >= 0; i--) {
+            let d = dist(player.x, player.y, groundEnemies[i].x, groundEnemies[i].y);
+            if (d < player.size + groundEnemies[i].size) {
+                // AI-AI (special enemy) doesn't damage player on contact
+                if (!groundEnemies[i].isSpecial) {
+                    createExplosion(groundEnemies[i].x, groundEnemies[i].y, groundEnemies[i].size);
+                    groundEnemies[i].onDestroyed();
+                    groundEnemies.splice(i, 1);
+                    player.hit();
+                    enemyManager.onPlayerHit();
+                }
+            }
+        }
     }
 
     // Player vs powerups

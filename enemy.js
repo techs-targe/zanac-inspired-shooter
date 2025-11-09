@@ -908,3 +908,109 @@ class BossEnemy {
         return false;
     }
 }
+
+// Special Enemy: AI-AI (アイアイ)
+// A rare special ground enemy that appears in specific areas
+class SpecialAIAI {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 30;
+        this.hp = 666;
+        this.maxHp = 666;
+        this.scoreValue = 10000;
+        this.isGround = true;
+        this.isSpecial = true; // Flag to identify as AI-AI
+        this.canShoot = false;
+        this.scrollSpeed = 0.3; // Very slow movement
+        this.angle = 0; // For animation
+
+        // Color scheme - make it look special
+        this.baseColor = color(255, 215, 0); // Gold
+        this.glowColor = color(255, 255, 100);
+    }
+
+    update() {
+        // Slowly scroll down
+        this.y += this.scrollSpeed;
+
+        // Rotate for visual effect
+        this.angle += 0.02;
+    }
+
+    shoot() {
+        // AI-AI doesn't shoot
+    }
+
+    onDestroyed() {
+        // Special rewards when destroyed
+        if (player && player.alive) {
+            // Main weapon +15 levels
+            player.mainWeaponLevel = min(30, player.mainWeaponLevel + 15);
+
+            // Sub weapon level 5
+            player.subWeaponLevel = 5;
+            if (player.subWeaponType !== 0) {
+                player.initSubWeapon(player.subWeaponType);
+            }
+
+            // Add 1 life
+            player.lives++;
+
+            // Visual feedback
+            createExplosion(this.x, this.y, this.size * 3);
+        }
+    }
+
+    draw() {
+        push();
+        translate(this.x, this.y);
+
+        // Outer glow
+        noStroke();
+        for (let i = 3; i > 0; i--) {
+            fill(this.glowColor.levels[0], this.glowColor.levels[1], this.glowColor.levels[2], 50 / i);
+            ellipse(0, 0, this.size * 2 * i * 0.4, this.size * 2 * i * 0.4);
+        }
+
+        // Main body - golden orb
+        fill(255, 215, 0);
+        ellipse(0, 0, this.size * 2, this.size * 2);
+
+        // Inner shine
+        fill(255, 255, 200, 200);
+        ellipse(-this.size * 0.3, -this.size * 0.3, this.size * 1.2, this.size * 1.2);
+
+        // Rotating symbols (AI characters)
+        fill(255, 100, 100);
+        rotate(this.angle);
+        textSize(16);
+        textAlign(CENTER, CENTER);
+        text('AI', 0, 0);
+
+        // Reset rotation for HP bar
+        rotate(-this.angle);
+
+        // HP bar
+        if (this.hp > 0 && this.maxHp > 0) {
+            fill(255, 100, 100);
+            rectMode(CENTER);
+            rect(0, -this.size - 10, this.size * 2, 5);
+
+            fill(100, 255, 100);
+            let hpWidth = map(this.hp, 0, this.maxHp, 0, this.size * 2);
+            rect(-(this.size * 2 - hpWidth) / 2, -this.size - 10, hpWidth, 5);
+        }
+
+        // HP text
+        fill(255, 255, 100);
+        textSize(10);
+        text(`${int(this.hp)}/${this.maxHp}`, 0, -this.size - 20);
+
+        pop();
+    }
+
+    isOffscreen() {
+        return this.y > GAME_HEIGHT + 50;
+    }
+}
