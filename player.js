@@ -33,6 +33,9 @@ class Player {
         this.lastMoveDir = {x: 0, y: -1}; // For weapon 0 (all-range)
         this.isMoving = false; // Track if player is currently moving
 
+        // Crow bonus tracking (for special 1UP bonus)
+        this.hasUsedMainWeapon = false; // Reset on game start and after death
+
         this.initSubWeapon(0);
     }
 
@@ -139,6 +142,9 @@ class Player {
         if (!this.alive || this.mainFireCooldown > 0) return;
 
         this.mainFireCooldown = this.mainFireRate;
+
+        // Mark that main weapon was used (for Crow bonus)
+        this.hasUsedMainWeapon = true;
 
         // Level 30: Thin laser with increased power
         if (this.mainWeaponLevel === 30) {
@@ -560,6 +566,9 @@ class Player {
         this.x = GAME_WIDTH / 2;
         this.respawnY = GAME_HEIGHT + 20; // Start below screen
         this.y = this.respawnY;
+
+        // Reset main weapon usage flag for Crow bonus
+        this.hasUsedMainWeapon = false;
     }
 
     die() {

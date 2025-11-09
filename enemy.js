@@ -1270,3 +1270,134 @@ class PowerBoxFormation {
         return this.boxes.every(box => box.isOffscreen());
     }
 }
+
+// Special Crow (カラス)
+// Bonus enemy that appears at game start and specific areas
+// Drops 1UP if killed with sub weapon BEFORE using main weapon
+class SpecialCrow {
+    constructor() {
+        this.x = GAME_WIDTH + 20; // Start from right edge offscreen
+        this.y = -20; // Start above screen
+        this.size = 12;
+        this.hp = 1;
+        this.maxHp = 1;
+        this.scoreValue = 1000;
+        this.isSpecialCrow = true;
+        this.canShoot = false;
+
+        // Movement pattern: right edge → center → U-turn → top
+        this.phase = 0; // 0: descend, 1: U-turn, 2: ascend
+        this.targetY = GAME_HEIGHT / 2; // Descend to center
+        this.speed = 2.0;
+        this.angle = 0; // For flapping animation
+
+        // U-turn parameters
+        this.turnStartY = GAME_HEIGHT / 2;
+        this.turnRadius = 30;
+        this.turnAngle = 0; // 0 to PI for U-turn
+    }
+
+    update() {
+        this.angle += 0.15; // Wing flapping animation
+
+        if (this.phase === 0) {
+            // Phase 0: Descend from right edge toward center
+            this.y += this.speed;
+            this.x -= this.speed * 0.3; // Slight leftward movement
+
+            if (this.y >= this.targetY) {
+                this.phase = 1;
+                this.turnStartY = this.y;
+                this.turnAngle = 0;
+            }
+        } else if (this.phase === 1) {
+            // Phase 1: U-turn (semicircle)
+            this.turnAngle += 0.05;
+
+            // Calculate position on semicircle
+            let centerX = this.x - this.turnRadius;
+            this.x = centerX + this.turnRadius * cos(this.turnAngle);
+            this.y = this.turnStartY + this.turnRadius * sin(this.turnAngle);
+
+            if (this.turnAngle >= PI) {
+                this.phase = 2;
+            }
+        } else if (this.phase === 2) {
+            // Phase 2: Ascend and exit
+            this.y -= this.speed;
+            this.x -= this.speed * 0.3; // Continue leftward
+        }
+    }
+
+    shoot() {
+        // Crow doesn't shoot
+    }
+
+    hits(bullet) {
+        // Check if bullet collides with crow
+        let d = dist(this.x, this.y, bullet.x, bullet.y);
+        return d < this.size + bullet.size;
+    }
+
+    onDestroyed() {
+        // Check if player deserves 1UP bonus
+        // Bonus condition: killed with sub weapon BEFORE using main weapon
+        if (player && player.alive && !player.hasUsedMainWeapon) {
+            console.log('CROW BONUS! 1UP for not using main weapon!');
+            powerUps.push(new OneUpItem(this.x, this.y));
+
+            // Extra visual feedback
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(this.x, this.y, 15, color(255, 100, 255)));
+            }
+        }
+    }
+
+    draw() {
+        push();
+        translate(this.x, this.y);
+
+        // Draw crow (simple bird shape)
+        fill(50, 50, 50); // Dark gray/black
+        noStroke();
+
+        // Body
+        ellipse(0, 0, this.size * 1.5, this.size);
+
+        // Wings (flapping)
+        let wingY = sin(this.angle) * 3;
+        triangle(
+            -this.size, wingY,
+            -this.size * 2, wingY - 5,
+            -this.size, wingY + 5
+        );
+        triangle(
+            this.size, wingY,
+            this.size * 2, wingY - 5,
+            this.size, wingY + 5
+        );
+
+        // Head
+        fill(40, 40, 40);
+        ellipse(this.size * 0.4, -this.size * 0.3, this.size * 0.8, this.size * 0.8);
+
+        // Eye
+        fill(255, 0, 0);
+        ellipse(this.size * 0.6, -this.size * 0.4, 3, 3);
+
+        // Beak
+        fill(255, 200, 0);
+        triangle(
+            this.size * 0.8, -this.size * 0.3,
+            this.size * 1.2, -this.size * 0.3,
+            this.size, -this.size * 0.2
+        );
+
+        pop();
+    }
+
+    isOffscreen() {
+        // Offscreen if above top or too far left
+        return this.y < -50 || this.x < -50;
+    }
+}

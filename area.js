@@ -14,6 +14,8 @@ class AreaManager {
         this.supplyBasesSpawned = []; // Track which supply bases have been spawned
         this.powerBoxFormations = []; // Track PowerBox formations
         this.powerBoxMassSpawned = false; // Track if mass spawn has occurred
+        this.crow = null; // Special crow enemy
+        this.crowSpawned = false; // Track if crow has spawned in this area
         this.scrollSpeed = 1.5; // Default scroll speed
         this.normalScrollSpeed = 1.5; // Normal scroll speed
         this.highScrollSpeed = 1.5; // High scroll speed for high-speed areas
@@ -222,6 +224,23 @@ class AreaManager {
             this.aiaiSpawned = true;
         }
 
+        // Spawn Crow at midpoint (progress = 1500) in areas 4, 8, 12
+        if (this.areaProgress === 1500 && !this.crowSpawned) {
+            if (this.currentArea === 4 || this.currentArea === 8 || this.currentArea === 12) {
+                this.spawnCrow();
+                this.crowSpawned = true;
+            }
+        }
+
+        // Update Crow if active
+        if (this.crow) {
+            this.crow.update();
+            // Remove if offscreen
+            if (this.crow.isOffscreen()) {
+                this.crow = null;
+            }
+        }
+
         // Spawn ground enemies based on area configuration - increased frequency
         if (frameCount % 60 === 0 && random() < this.currentConfig.groundEnemyFreq) {
             this.spawnGroundEnemy();
@@ -251,6 +270,12 @@ class AreaManager {
         let x = random() < 0.5 ? 30 : GAME_WIDTH - 30; // Left or right edge
         let y = -40; // Spawn above screen
         this.groundEnemies.push(new SpecialAIAI(x, y));
+    }
+
+    spawnCrow() {
+        // Spawn special Crow bonus enemy
+        this.crow = new SpecialCrow();
+        console.log('Crow spawned! Shoot with sub weapon before using main weapon for 1UP!');
     }
 
     getSupplyBasePattern(areaNumber) {
@@ -433,6 +458,8 @@ class AreaManager {
             this.supplyBasesSpawned = []; // Reset supply base spawn tracking
             this.powerBoxFormations = []; // Reset PowerBox formations
             this.powerBoxMassSpawned = false; // Reset mass spawn flag
+            this.crow = null; // Reset Crow
+            this.crowSpawned = false; // Reset Crow spawn flag
             this.groundEnemies = [];
             this.currentConfig = this.areaConfigs[this.currentArea - 1];
 

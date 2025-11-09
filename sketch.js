@@ -92,6 +92,13 @@ function initGame() {
     // Reset 1UP system
     nextExtraLifeScore = 10000;
     extraLifeInterval = 10000;
+
+    // Spawn PowerBox formations at game start (left and right)
+    areaManager.spawnPowerBoxFormation(80);  // Left side
+    areaManager.spawnPowerBoxFormation(GAME_WIDTH - 80);  // Right side
+
+    // Spawn Crow at game start
+    areaManager.spawnCrow();
 }
 
 function updateGame() {
@@ -297,6 +304,11 @@ function drawGame() {
     // Draw PowerBox formations
     if (areaManager) {
         areaManager.drawPowerBoxFormations();
+    }
+
+    // Draw Crow if active
+    if (areaManager && areaManager.crow) {
+        areaManager.crow.draw();
     }
 
     for (let powerUp of powerUps) {
@@ -689,6 +701,30 @@ function checkCollisions() {
                         if (bulletRemoved) break;
                     }
                 }
+                if (bulletRemoved) break;
+            }
+        }
+
+        // Bullets vs Crow
+        if (bullets[i] && areaManager && areaManager.crow) {
+            let crow = areaManager.crow;
+            if (crow.hp > 0 && bullets[i].hits && bullets[i].hits(crow)) {
+                crow.hp -= bullets[i].damage;
+
+                // Remove bullet (crow has 1 HP so it will die)
+                if (!bullets[i].penetrating) {
+                    bullets.splice(i, 1);
+                    bulletRemoved = true;
+                }
+
+                // Crow destroyed
+                if (crow.hp <= 0) {
+                    addScore(crow.scoreValue);
+                    createExplosion(crow.x, crow.y, crow.size * 2);
+                    crow.onDestroyed();
+                    areaManager.crow = null; // Remove crow
+                }
+
                 if (bulletRemoved) break;
             }
         }
