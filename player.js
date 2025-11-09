@@ -270,11 +270,9 @@ class Player {
     }
 
     shootWeapon4() {
-        // Vibrating shot - limit to maxBullets on screen
-        let existingBullets = bullets.filter(b => b instanceof VibratingBullet);
-        if (existingBullets.length >= this.maxBullets) {
-            return; // Can't fire more bullets until some are destroyed
-        }
+        // Vibrating shot - only one bullet at a time
+        let existingBullet = bullets.find(b => b instanceof VibratingBullet);
+        if (existingBullet) return; // Can't fire until current bullet is destroyed
 
         let size = 8 + this.subWeaponLevel * 4;
         bullets.push(new VibratingBullet(this.x, this.y - this.size, size, this.subWeaponDurability));
@@ -456,11 +454,10 @@ class Player {
                 this.subFireRate = 20;
                 break;
 
-            case 4: // Durability per shot (fixed 20, max bullets: 20 + level)
+            case 4: // Durability per shot (fixed 20, only 1 bullet at a time)
                 this.subWeaponAmmo = -1;
                 this.subWeaponTime = -1;
                 this.subWeaponDurability = 20;
-                this.maxBullets = 20 + level; // Max number of bullets on screen
                 this.subFireRate = 15;
                 break;
 

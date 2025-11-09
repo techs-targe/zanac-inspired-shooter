@@ -475,13 +475,17 @@ function checkCollisions() {
                     continue;
                 }
 
-                // Special handling for boss hits (weapons 1, 4, 5 deflect)
+                // Special handling for boss hits
                 if (enemies[j].isBoss) {
                     enemies[j].hp -= bullets[i].damage;
 
-                    // Weapons 1, 4, 5 (boomerang) deflect from boss
-                    if (bullets[i] instanceof PenetratingBullet ||
-                        bullets[i] instanceof VibratingBullet ||
+                    // Weapon 1 (PenetratingBullet) - destroy on boss hit to prevent continuous damage
+                    if (bullets[i] instanceof PenetratingBullet) {
+                        bullets.splice(i, 1);
+                        bulletRemoved = true;
+                    }
+                    // Weapons 4, 5 (boomerang) deflect from boss
+                    else if (bullets[i] instanceof VibratingBullet ||
                         bullets[i] instanceof StraightLaserBullet ||
                         bullets[i] instanceof BoomerangBullet) {
                         bullets[i].deflectFromBoss();
