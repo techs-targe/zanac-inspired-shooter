@@ -407,11 +407,6 @@ function drawTitle() {
     text('Featuring ALG System:', width / 2, height / 2 + 202);
     text('Difficulty adapts to your skill!', width / 2, height / 2 + 218);
 
-    // Debug mode
-    textSize(11);
-    fill(100, 255, 255);
-    text('Press D for Debug Mode (all power-ups)', width / 2, height / 2 + 244);
-
     if (highScore > 0) {
         textSize(15);
         fill(255, 255, 100);

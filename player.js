@@ -268,11 +268,10 @@ class Player {
     }
 
     shootWeapon4() {
-        // Vibrating shot - remove existing and create new one
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            if (bullets[i] instanceof VibratingBullet) {
-                bullets.splice(i, 1);
-            }
+        // Vibrating shot - limit to maxBullets on screen
+        let existingBullets = bullets.filter(b => b instanceof VibratingBullet);
+        if (existingBullets.length >= this.maxBullets) {
+            return; // Can't fire more bullets until some are destroyed
         }
 
         let size = 8 + this.subWeaponLevel * 4;
@@ -324,11 +323,12 @@ class Player {
             }
         }
 
+        // Reduced damage to 1/10 (0.2 instead of 2)
         if (this.subWeaponLevel < 3) {
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 6));
+            bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 6, 0.2));
         } else {
             // Giant high-speed
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 16));
+            bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 16, 0.2));
         }
 
         // Time only decreases while shooting
@@ -442,17 +442,18 @@ class Player {
                 this.subFireRate = 20;
                 break;
 
-            case 3: // Time-based (250 + 50 per level seconds)
+            case 3: // Time-based (180 + 20 per level seconds)
                 this.subWeaponAmmo = -1;
-                this.subWeaponTime = (250 + level * 50) * 60; // Convert to frames (60 fps)
+                this.subWeaponTime = (180 + level * 20) * 60; // Convert to frames (60 fps)
                 this.subWeaponDurability = -1;
                 this.subFireRate = 20;
                 break;
 
-            case 4: // Durability per shot (60 + 20 per level)
+            case 4: // Durability per shot (fixed 20, max bullets: 20 + level)
                 this.subWeaponAmmo = -1;
                 this.subWeaponTime = -1;
-                this.subWeaponDurability = 60 + level * 20;
+                this.subWeaponDurability = 20;
+                this.maxBullets = 20 + level; // Max number of bullets on screen
                 this.subFireRate = 15;
                 break;
 

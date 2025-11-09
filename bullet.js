@@ -70,8 +70,8 @@ class Bullet {
 
 // Penetrating bullet (weapon 1, 7)
 class PenetratingBullet extends Bullet {
-    constructor(x, y, vx, vy, size = 8) {
-        super(x, y, vx, vy, true, 2, size);
+    constructor(x, y, vx, vy, size = 8, damage = 2) {
+        super(x, y, vx, vy, true, damage, size);
         this.penetrating = true;
     }
 
