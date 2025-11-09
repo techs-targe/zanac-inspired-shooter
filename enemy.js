@@ -915,7 +915,7 @@ class SpecialAIAI {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.size = 30;
+        this.size = 15; // Smaller size (was 30)
         this.hp = 666;
         this.maxHp = 666;
         this.scoreValue = 10000;
@@ -984,28 +984,104 @@ class SpecialAIAI {
         // Rotating symbols (AI characters)
         fill(255, 100, 100);
         rotate(this.angle);
-        textSize(16);
+        textSize(10); // Smaller text (was 16)
         textAlign(CENTER, CENTER);
         text('AI', 0, 0);
 
         // Reset rotation for HP bar
         rotate(-this.angle);
 
+        // HP bar (no text display)
+        if (this.hp > 0 && this.maxHp > 0) {
+            fill(255, 100, 100);
+            rectMode(CENTER);
+            rect(0, -this.size - 8, this.size * 2, 4);
+
+            fill(100, 255, 100);
+            let hpWidth = map(this.hp, 0, this.maxHp, 0, this.size * 2);
+            rect(-(this.size * 2 - hpWidth) / 2, -this.size - 8, hpWidth, 4);
+        }
+
+        pop();
+    }
+
+    isOffscreen() {
+        return this.y > GAME_HEIGHT + 50;
+    }
+}
+
+// Supply Base (補給基地)
+// Ground-based supply stations that don't attack but drop weapons
+class SupplyBase {
+    constructor(x, y, scrollSpeed = 1.5) {
+        this.x = x;
+        this.y = y;
+        this.size = 20;
+        this.hp = 100;
+        this.maxHp = 100;
+        this.scoreValue = 500;
+        this.isGround = true;
+        this.isSupplyBase = true; // Flag to identify as supply base
+        this.canShoot = false;
+        this.scrollSpeed = scrollSpeed; // Match area scroll speed
+
+        // Color scheme - neutral/friendly
+        this.baseColor = color(100, 150, 200);
+    }
+
+    update() {
+        // Scroll down with area speed
+        this.y += this.scrollSpeed;
+    }
+
+    shoot() {
+        // Supply bases don't shoot
+    }
+
+    onDestroyed() {
+        // Always drop a random weapon (0-7)
+        let weaponType = int(random(0, 8));
+        powerUps.push(new SubWeapon(this.x, this.y, weaponType));
+    }
+
+    draw() {
+        push();
+        translate(this.x, this.y);
+
+        // Base structure - rectangular with antenna
+        noStroke();
+
+        // Main body
+        fill(100, 150, 200);
+        rect(-this.size * 0.8, -this.size * 0.6, this.size * 1.6, this.size * 1.2);
+
+        // Top section
+        fill(120, 170, 220);
+        rect(-this.size * 0.5, -this.size, this.size, this.size * 0.4);
+
+        // Antenna
+        stroke(150, 200, 255);
+        strokeWeight(2);
+        line(0, -this.size, 0, -this.size - 8);
+        noStroke();
+        fill(255, 100, 100);
+        ellipse(0, -this.size - 8, 4, 4);
+
+        // Window/lights
+        fill(255, 255, 100, 150);
+        ellipse(-this.size * 0.4, -this.size * 0.3, 5, 5);
+        ellipse(this.size * 0.4, -this.size * 0.3, 5, 5);
+
         // HP bar
         if (this.hp > 0 && this.maxHp > 0) {
             fill(255, 100, 100);
             rectMode(CENTER);
-            rect(0, -this.size - 10, this.size * 2, 5);
+            rect(0, this.size + 5, this.size * 1.5, 3);
 
             fill(100, 255, 100);
-            let hpWidth = map(this.hp, 0, this.maxHp, 0, this.size * 2);
-            rect(-(this.size * 2 - hpWidth) / 2, -this.size - 10, hpWidth, 5);
+            let hpWidth = map(this.hp, 0, this.maxHp, 0, this.size * 1.5);
+            rect(-(this.size * 1.5 - hpWidth) / 2, this.size + 5, hpWidth, 3);
         }
-
-        // HP text
-        fill(255, 255, 100);
-        textSize(10);
-        text(`${int(this.hp)}/${this.maxHp}`, 0, -this.size - 20);
 
         pop();
     }

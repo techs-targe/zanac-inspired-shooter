@@ -11,10 +11,13 @@ class AreaManager {
         this.groundEnemies = [];
         this.groundEnemySpawnPoints = [];
         this.aiaiSpawned = false; // Track if AI-AI has spawned in this area
+        this.supplyBasesSpawned = []; // Track which supply bases have been spawned
+        this.scrollSpeed = 1.5; // Default scroll speed
 
         // Area configurations
         this.areaConfigs = this.initAreaConfigs();
         this.currentConfig = this.areaConfigs[this.currentArea - 1];
+        this.scrollSpeed = this.currentConfig.scrollSpeed || 1.5;
     }
 
     initAreaConfigs() {
@@ -29,15 +32,17 @@ class AreaManager {
                 groundEnemyFreq: 0.15, // Increased from 0.02
                 specialFeature: 'craters'
             },
-            { // Area 2 - Forest
+            { // Area 2 - Forest (HIGH SPEED)
                 number: 2,
                 name: 'Forest Zone',
                 bgColor: {r: 20, g: 40, b: 20},
                 terrainColor: {r: 40, g: 120, b: 40},
                 bossType: 'organic',
                 difficulty: 1.2,
-                groundEnemyFreq: 0.18, // Increased from 0.03
-                specialFeature: 'trees'
+                groundEnemyFreq: 0.18,
+                specialFeature: 'trees',
+                hasHighSpeed: true,
+                scrollSpeed: 4.0
             },
             { // Area 3 - Ocean/Coast
                 number: 3,
@@ -62,16 +67,18 @@ class AreaManager {
                 specialFeature: 'alien',
                 hasRio: true
             },
-            { // Area 5 - Space
+            { // Area 5 - Space (HIGH SPEED)
                 number: 5,
                 name: 'Asteroid Field',
                 bgColor: {r: 5, g: 5, b: 15},
                 terrainColor: {r: 80, g: 80, b: 80},
                 bossType: 'mech',
                 difficulty: 1.8,
-                groundEnemyFreq: 0.15, // Increased from 0.02
+                groundEnemyFreq: 0.15,
                 specialFeature: 'asteroids',
-                hasAiai: true
+                hasAiai: true,
+                hasHighSpeed: true,
+                scrollSpeed: 4.5
             },
             { // Area 6 - Ruins
                 number: 6,
@@ -95,16 +102,18 @@ class AreaManager {
                 specialFeature: 'colony',
                 hasWarps: true
             },
-            { // Area 8 - Organic
+            { // Area 8 - Organic (HIGH SPEED)
                 number: 8,
                 name: 'Bio-Zone',
                 bgColor: {r: 30, g: 50, b: 30},
                 terrainColor: {r: 80, g: 140, b: 80},
                 bossType: 'organic',
                 difficulty: 2.4,
-                groundEnemyFreq: 0.25, // Increased from 0.045
+                groundEnemyFreq: 0.25,
                 specialFeature: 'organic',
-                hasAiai: true
+                hasAiai: true,
+                hasHighSpeed: true,
+                scrollSpeed: 5.0
             },
             { // Area 9 - Mechanical Base
                 number: 9,
@@ -116,39 +125,45 @@ class AreaManager {
                 groundEnemyFreq: 0.28, // Increased from 0.05
                 specialFeature: 'mechanical'
             },
-            { // Area 10 - Red Base
+            { // Area 10 - Red Base (HIGH SPEED)
                 number: 10,
                 name: 'Red Fortress',
                 bgColor: {r: 50, g: 20, b: 20},
                 terrainColor: {r: 150, g: 60, b: 60},
                 bossType: 'fortress',
                 difficulty: 2.8,
-                groundEnemyFreq: 0.28, // Increased from 0.05
+                groundEnemyFreq: 0.28,
                 specialFeature: 'fortress',
-                hasRio: true
+                hasRio: true,
+                hasHighSpeed: true,
+                scrollSpeed: 5.5
             },
-            { // Area 11 - Pipeline
+            { // Area 11 - Pipeline (HIGH SPEED)
                 number: 11,
                 name: 'Core Pipeline',
                 bgColor: {r: 20, g: 40, b: 50},
                 terrainColor: {r: 60, g: 120, b: 150},
                 bossType: 'mech',
                 difficulty: 3.0,
-                groundEnemyFreq: 0.32, // Increased from 0.06
+                groundEnemyFreq: 0.32,
                 specialFeature: 'pipes',
-                hasAiai: true
+                hasAiai: true,
+                hasHighSpeed: true,
+                scrollSpeed: 6.0
             },
-            { // Area 12 - Final
+            { // Area 12 - Final (HIGH SPEED)
                 number: 12,
                 name: 'System Core',
                 bgColor: {r: 40, g: 60, b: 20},
                 terrainColor: {r: 100, g: 180, b: 60},
                 bossType: 'final',
                 difficulty: 3.5,
-                groundEnemyFreq: 0.35, // Increased from 0.07
+                groundEnemyFreq: 0.35,
                 specialFeature: 'core',
                 hasRio: true,
-                hasAiai: true
+                hasAiai: true,
+                hasHighSpeed: true,
+                scrollSpeed: 6.5
             }
         ];
     }
@@ -169,6 +184,9 @@ class AreaManager {
         }
 
         this.areaProgress++;
+
+        // Spawn supply bases at specific progress points
+        this.spawnSupplyBases();
 
         // Spawn AI-AI at midpoint (progress = 1500) in specific areas
         if (this.areaProgress === 1500 && this.currentConfig.hasAiai && !this.aiaiSpawned) {
@@ -194,14 +212,123 @@ class AreaManager {
         let type = random() < 0.3 ? 'core' : 'turret';
         let level = this.currentArea;
 
-        this.groundEnemies.push(new GroundEnemy(x, y, type, level, targetY));
+        // Pass scroll speed to ground enemy
+        let enemy = new GroundEnemy(x, y, type, level, targetY);
+        enemy.scrollSpeed = this.scrollSpeed;
+        this.groundEnemies.push(enemy);
     }
 
     spawnAIAI() {
-        // Spawn special AI-AI enemy at center of screen
-        let x = GAME_WIDTH / 2;
+        // Spawn special AI-AI enemy at screen edge (left or right)
+        let x = random() < 0.5 ? 30 : GAME_WIDTH - 30; // Left or right edge
         let y = -40; // Spawn above screen
         this.groundEnemies.push(new SpecialAIAI(x, y));
+    }
+
+    getSupplyBasePattern(areaNumber) {
+        // Hardcoded supply base patterns for each area (5 bases per area)
+        // Each pattern is an array of {progress, positions[]}
+        const patterns = {
+            1: [ // Edges pattern
+                {progress: 500, x: 30},
+                {progress: 800, x: GAME_WIDTH - 30},
+                {progress: 1200, x: 30},
+                {progress: 1800, x: GAME_WIDTH - 30},
+                {progress: 2400, x: GAME_WIDTH / 2}
+            ],
+            2: [ // Center cluster
+                {progress: 600, x: GAME_WIDTH / 2 - 40},
+                {progress: 600, x: GAME_WIDTH / 2 + 40},
+                {progress: 1400, x: GAME_WIDTH / 2 - 60},
+                {progress: 1400, x: GAME_WIDTH / 2},
+                {progress: 1400, x: GAME_WIDTH / 2 + 60}
+            ],
+            3: [ // Left side line
+                {progress: 400, x: 50},
+                {progress: 900, x: 50},
+                {progress: 1400, x: 50},
+                {progress: 1900, x: GAME_WIDTH - 50},
+                {progress: 2500, x: GAME_WIDTH / 2}
+            ],
+            4: [ // Alternating
+                {progress: 500, x: 40},
+                {progress: 900, x: GAME_WIDTH - 40},
+                {progress: 1300, x: 40},
+                {progress: 1700, x: GAME_WIDTH - 40},
+                {progress: 2200, x: GAME_WIDTH / 2}
+            ],
+            5: [ // Wide spread
+                {progress: 700, x: 60},
+                {progress: 700, x: GAME_WIDTH / 2},
+                {progress: 700, x: GAME_WIDTH - 60},
+                {progress: 1800, x: 40},
+                {progress: 1800, x: GAME_WIDTH - 40}
+            ],
+            6: [ // Right side line
+                {progress: 500, x: GAME_WIDTH - 50},
+                {progress: 1000, x: GAME_WIDTH - 50},
+                {progress: 1500, x: GAME_WIDTH - 50},
+                {progress: 2000, x: 50},
+                {progress: 2500, x: GAME_WIDTH / 2}
+            ],
+            7: [ // Diagonal pattern
+                {progress: 600, x: 50},
+                {progress: 1000, x: GAME_WIDTH / 4},
+                {progress: 1400, x: GAME_WIDTH / 2},
+                {progress: 1800, x: GAME_WIDTH * 3/4},
+                {progress: 2200, x: GAME_WIDTH - 50}
+            ],
+            8: [ // Triple clusters
+                {progress: 500, x: 50},
+                {progress: 500, x: GAME_WIDTH / 2},
+                {progress: 500, x: GAME_WIDTH - 50},
+                {progress: 2000, x: 60},
+                {progress: 2000, x: GAME_WIDTH - 60}
+            ],
+            9: [ // Center heavy
+                {progress: 700, x: GAME_WIDTH / 2},
+                {progress: 1100, x: GAME_WIDTH / 2 - 50},
+                {progress: 1100, x: GAME_WIDTH / 2 + 50},
+                {progress: 1900, x: 40},
+                {progress: 1900, x: GAME_WIDTH - 40}
+            ],
+            10: [ // Edge heavy
+                {progress: 600, x: 30},
+                {progress: 1000, x: GAME_WIDTH - 30},
+                {progress: 1400, x: 30},
+                {progress: 1800, x: GAME_WIDTH - 30},
+                {progress: 2200, x: 30}
+            ],
+            11: [ // Scattered
+                {progress: 400, x: 70},
+                {progress: 1000, x: GAME_WIDTH - 70},
+                {progress: 1500, x: GAME_WIDTH / 2},
+                {progress: 2000, x: 40},
+                {progress: 2600, x: GAME_WIDTH - 40}
+            ],
+            12: [ // Final pattern - 6 bases
+                {progress: 500, x: 50},
+                {progress: 500, x: GAME_WIDTH - 50},
+                {progress: 1200, x: GAME_WIDTH / 3},
+                {progress: 1200, x: GAME_WIDTH * 2/3},
+                {progress: 2000, x: GAME_WIDTH / 2 - 40},
+                {progress: 2000, x: GAME_WIDTH / 2 + 40}
+            ]
+        };
+
+        return patterns[areaNumber] || patterns[1];
+    }
+
+    spawnSupplyBases() {
+        let pattern = this.getSupplyBasePattern(this.currentArea);
+
+        for (let base of pattern) {
+            // Check if this base should spawn at current progress
+            if (this.areaProgress === base.progress && !this.supplyBasesSpawned.includes(base.progress)) {
+                this.groundEnemies.push(new SupplyBase(base.x, -40, this.scrollSpeed));
+                this.supplyBasesSpawned.push(base.progress);
+            }
+        }
     }
 
     spawnBoss() {
@@ -226,8 +353,10 @@ class AreaManager {
             this.bossDefeated = false;
             this.bossDefeatedTimer = 0;
             this.aiaiSpawned = false; // Reset AI-AI spawn flag
+            this.supplyBasesSpawned = []; // Reset supply base spawn tracking
             this.groundEnemies = [];
             this.currentConfig = this.areaConfigs[this.currentArea - 1];
+            this.scrollSpeed = this.currentConfig.scrollSpeed || 1.5;
 
             // Visual notification
             console.log(`Entering Area ${this.currentArea}: ${this.currentConfig.name}`);

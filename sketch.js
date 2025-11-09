@@ -89,7 +89,8 @@ function initGame() {
 function updateGame() {
     try {
         gameTime++;
-        scrollOffset += 2;
+        // Scroll speed based on current area
+        scrollOffset += areaManager.scrollSpeed;
 
         // Update player (if alive or game still running)
         if (player) {
@@ -647,12 +648,12 @@ function checkCollisions() {
             }
         }
 
-        // Ground enemies vs player (collision) - AI-AI doesn't damage player
+        // Ground enemies vs player (collision) - AI-AI and Supply Bases don't damage player
         for (let i = groundEnemies.length - 1; i >= 0; i--) {
             let d = dist(player.x, player.y, groundEnemies[i].x, groundEnemies[i].y);
             if (d < player.size + groundEnemies[i].size) {
-                // AI-AI (special enemy) doesn't damage player on contact
-                if (!groundEnemies[i].isSpecial) {
+                // AI-AI and Supply Bases don't damage player on contact
+                if (!groundEnemies[i].isSpecial && !groundEnemies[i].isSupplyBase) {
                     createExplosion(groundEnemies[i].x, groundEnemies[i].y, groundEnemies[i].size);
                     groundEnemies[i].onDestroyed();
                     groundEnemies.splice(i, 1);

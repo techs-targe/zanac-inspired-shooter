@@ -533,10 +533,18 @@ class Player {
         createExplosion(this.x, this.y, this.size * 2);
 
         // Reset weapons and levels on death
+        this.mainWeaponLevel = 0;
         this.subWeaponType = 0;
         this.subWeaponLevel = 0;
-        this.mainWeaponLevel = 0;
         this.subWeaponActive = null;
+
+        // Remove all boomerang bullets (weapon 5)
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            if (bullets[i] instanceof BoomerangBullet) {
+                bullets.splice(i, 1);
+            }
+        }
+
         this.initSubWeapon(0);
 
         gameState = GAME_STATE.GAME_OVER;
