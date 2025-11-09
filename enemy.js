@@ -1143,7 +1143,7 @@ class PowerBox {
 
         let distance = dist(this.x, this.y, player.x, player.y);
         if (distance < this.size + player.size) {
-            // Collision detected
+            // Collision detected - box is always destroyed
             if (this.hasPowerChip && this.formation && !this.formation.touched) {
                 // Special bonus: +5 main weapon levels without damage
                 player.mainWeaponLevel = min(player.mainWeaponLevel + 5, 30);
@@ -1153,17 +1153,20 @@ class PowerBox {
                     particles.push(new Particle(this.x, this.y, 10, color(255, 255, 100)));
                 }
 
-                // Mark formation as touched and destroy this box
+                // Mark formation as touched
                 if (this.formation) {
                     this.formation.touched = true;
                 }
-                this.hp = 0;
-                return true; // Collision handled, box destroyed
             } else {
                 // Normal collision - damage player
                 player.hit();
-                return true;
             }
+
+            // Always destroy the box on collision
+            this.hp = 0;
+            createExplosion(this.x, this.y, this.size);
+            addScore(this.scoreValue);
+            return true;
         }
         return false;
     }

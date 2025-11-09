@@ -508,12 +508,15 @@ class AreaManager {
         let bg = this.getBackgroundColors();
         let terrain = this.getTerrainColor();
 
-        // Stars (for space areas)
+        // Stars (for space areas OR high-speed areas)
         if (this.currentConfig.specialFeature === 'asteroids' ||
-            this.currentConfig.specialFeature === 'colony') {
+            this.currentConfig.specialFeature === 'colony' ||
+            this.currentConfig.hasHighSpeed) {
             stroke(bg.r + 40, bg.g + 40, bg.b + 80);
             strokeWeight(1);
-            for (let i = 0; i < 80; i++) {
+            // More stars for high-speed areas, and they move faster
+            let starCount = this.currentConfig.hasHighSpeed ? 120 : 80;
+            for (let i = 0; i < starCount; i++) {
                 let x = (i * 37) % width;
                 let y = ((i * 73 + scrollOffset * (1 + i % 3)) % height);
                 point(x, y);

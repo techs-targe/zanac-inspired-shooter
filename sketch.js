@@ -533,11 +533,25 @@ function checkCollisions() {
                     if (enemies[j].isBoss && !areaManager.bossDefeated) {
                         // Only call once - guard with bossDefeated flag
                         areaManager.onBossDefeated();
-                        // Boss drops guaranteed power-up
+                        // Boss drops multiple items (4-6 items: P-items and 0-7 weapons)
                         try {
-                            powerUps.push(new SubWeapon(enemies[j].x, enemies[j].y, int(random(0, 8))));
+                            let numDrops = int(random(4, 7)); // 4-6 items
+                            for (let k = 0; k < numDrops; k++) {
+                                // Random offset from boss position to scatter items
+                                let offsetX = random(-40, 40);
+                                let offsetY = random(-30, 30);
+                                let dropX = enemies[j].x + offsetX;
+                                let dropY = enemies[j].y + offsetY;
+
+                                // 50% P-item, 50% Sub weapon
+                                if (random() < 0.5) {
+                                    powerUps.push(new PowerChip(dropX, dropY));
+                                } else {
+                                    powerUps.push(new SubWeapon(dropX, dropY, int(random(0, 8))));
+                                }
+                            }
                         } catch (e) {
-                            console.error("Error creating boss power-up:", e);
+                            console.error("Error creating boss power-ups:", e);
                         }
                     } else if (!enemies[j].isBoss) {
                         // Drop powerup chance (30% for any, then split between types)
