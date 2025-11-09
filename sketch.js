@@ -27,6 +27,10 @@ let highScore = 0;
 let scrollOffset = 0;
 let gameTime = 0;
 
+// 1UP system tracking
+let nextExtraLifeScore = 10000; // First 1UP at 10,000 points
+let extraLifeInterval = 10000; // 10,000 points interval until 100,000
+
 // Key states for shooting
 let mainFirePressed = false;
 let subFirePressed = false;
@@ -84,6 +88,10 @@ function initGame() {
     score = 0;
     scrollOffset = 0;
     gameTime = 0;
+
+    // Reset 1UP system
+    nextExtraLifeScore = 10000;
+    extraLifeInterval = 10000;
 }
 
 function updateGame() {
@@ -766,11 +774,37 @@ function checkCollisions() {
 }
 
 function addScore(points) {
+    let oldScore = score;
     score += points;
+
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('znk_highscore', highScore);
     }
+
+    // Check for 1UP by score
+    // Until 100,000: every 10,000 points
+    // After 100,000: every 50,000 points
+    while (score >= nextExtraLifeScore) {
+        // Grant 1UP
+        if (player && player.alive) {
+            player.lives++;
+            // Visual feedback for 1UP
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(player.x, player.y, 15, color(100, 255, 100)));
+            }
+        }
+
+        // Update next threshold
+        if (nextExtraLifeScore < 100000) {
+            // Before 100k: increment by 10k
+            nextExtraLifeScore += 10000;
+        } else {
+            // After 100k: increment by 50k
+            nextExtraLifeScore += 50000;
+        }
+    }
+
     enemyManager.onScoreGained(points);
 }
 

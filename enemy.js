@@ -1118,6 +1118,12 @@ class PowerBox {
         // PowerBoxes don't shoot
     }
 
+    hits(bullet) {
+        // Check if bullet collides with this PowerBox
+        let d = dist(this.x, this.y, bullet.x, bullet.y);
+        return d < this.size + bullet.size;
+    }
+
     hit(damage) {
         // Mark formation as touched when any box is hit
         if (this.formation) {
