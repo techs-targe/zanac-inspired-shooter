@@ -15,9 +15,9 @@ class InputManager {
         // Touch control state
         this.touchButtons = {
             dpad: { x: 80, y: 0, size: 100 },   // Smaller D-pad
-            buttonA: { x: 0, y: 0, size: 45 },  // Main fire
-            buttonB: { x: 0, y: 0, size: 45 },  // Sub fire
-            pauseBtn: { x: 0, y: 0, size: 35 }  // Pause button
+            buttonA: { x: 0, y: 0, size: 20 },  // Main fire
+            buttonB: { x: 0, y: 0, size: 20 },  // Sub fire
+            pauseBtn: { x: 0, y: 0, size: 20 }  // Pause button
         };
 
         // Active touches for each button
@@ -69,25 +69,27 @@ class InputManager {
         setTimeout(() => {
             const rect = canvas.getBoundingClientRect();
 
-            // Position all controls near the bottom with safe margins
-            const bottomY = rect.height - 100;  // Base Y position, moved higher for safety
+            // Position all controls at the very bottom edge
+            const bottomY = rect.height - 20;
 
             // D-pad on bottom left
             this.touchButtons.dpad.x = 80;
-            this.touchButtons.dpad.y = bottomY;
+            this.touchButtons.dpad.y = rect.height - 60;
+
+            // All action buttons on the same Y level at bottom
+            const buttonY = rect.height - 20;
 
             // Pause button at bottom center
             this.touchButtons.pauseBtn.x = rect.width / 2;
-            this.touchButtons.pauseBtn.y = bottomY + 10;
+            this.touchButtons.pauseBtn.y = buttonY;
 
-            // Action buttons on bottom right - vertical layout
-            // B button (sub fire, blue) - upper position
-            this.touchButtons.buttonB.x = rect.width - 70;
-            this.touchButtons.buttonB.y = bottomY - 30;
+            // B button (sub fire, blue) - right side, left of A
+            this.touchButtons.buttonB.x = rect.width - 60;
+            this.touchButtons.buttonB.y = buttonY;
 
-            // A button (main fire, red) - lower position
-            this.touchButtons.buttonA.x = rect.width - 70;
-            this.touchButtons.buttonA.y = bottomY + 25;
+            // A button (main fire, red) - far right
+            this.touchButtons.buttonA.x = rect.width - 20;
+            this.touchButtons.buttonA.y = buttonY;
         }, 100);
 
         // Touch event handlers
