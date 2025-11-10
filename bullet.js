@@ -104,16 +104,43 @@ class Bullet {
                     text(this.hp, this.x, this.y - this.size * 1.5);
                 }
             } else if (this.bulletType === 'lead') {
-                // リード（しだれ弾）- 青紫色、基本破壊不能
-                fill(150, 100, 255);
-                ellipse(this.x, this.y, this.size, this.size);
+                // リード（しだれ弾）- 青紫色、涙型/水滴型、基本破壊不能
+                push();
+                translate(this.x, this.y);
 
-                fill(200, 150, 255, 180);
-                ellipse(this.x, this.y, this.size * 0.6, this.size * 0.6);
+                // Calculate angle based on velocity for teardrop direction
+                let angle = atan2(this.vy, this.vx);
+                rotate(angle);
 
-                // Glow
-                fill(150, 100, 255, 80);
-                ellipse(this.x, this.y, this.size * 1.6, this.size * 1.6);
+                // Outer glow
+                fill(150, 100, 255, 60);
+                ellipse(0, 0, this.size * 2, this.size * 2.5);
+
+                // Main body - teardrop shape (水滴型)
+                fill(120, 80, 220);
+                beginShape();
+                // Rounded top
+                for (let a = PI; a <= TWO_PI; a += 0.2) {
+                    let r = this.size * 0.5;
+                    vertex(cos(a) * r, sin(a) * r - this.size * 0.2);
+                }
+                // Pointed bottom
+                vertex(0, this.size * 0.8);
+                endShape(CLOSE);
+
+                // Highlight on teardrop
+                fill(200, 150, 255, 200);
+                ellipse(-this.size * 0.15, -this.size * 0.3, this.size * 0.5, this.size * 0.5);
+
+                // Small core
+                fill(255, 200, 255, 180);
+                ellipse(0, 0, this.size * 0.3, this.size * 0.3);
+
+                pop();
+
+                // Trailing glow effect (not rotated)
+                fill(150, 100, 255, 40);
+                ellipse(this.x, this.y, this.size * 1.8, this.size * 1.8);
             } else {
                 // Normal enemy bullet - red/orange energy
                 fill(255, 100, 100);

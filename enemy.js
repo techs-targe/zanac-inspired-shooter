@@ -664,22 +664,19 @@ class Enemy {
                 break;
 
             case 'takuwashi':
-                // タクワーシ：正面にいるときシグを猛烈連射
+                // タクワーシ：X軸を調整しながら常にシグを猛烈連射（16連射）
                 if (player && player.alive) {
-                    let xDiff = abs(player.x - this.x);
-                    if (xDiff < this.rapidFireRange) {
-                        // 正面にいる！猛烈連射
-                        enemyBullets.push(new Bullet(
-                            this.x,
-                            this.y,
-                            0,
-                            speed * 1.5,
-                            false,
-                            1,
-                            6,
-                            'sig' // シグ弾
-                        ));
-                    }
+                    // 常に真下に向けてシグを猛烈連射
+                    enemyBullets.push(new Bullet(
+                        this.x,
+                        this.y,
+                        0,
+                        speed * 1.5,
+                        false,
+                        1,
+                        6,
+                        'sig' // シグ弾を猛烈連射
+                    ));
                 }
                 break;
         }
