@@ -865,9 +865,10 @@ class Enemy {
 
 // Ground Enemy (Turret/Core)
 class GroundEnemy {
-    constructor(x, y, type = 'turret', level = 1) {
+    constructor(x, y, type = 'turret', level = 1, targetY = GAME_HEIGHT - 60) {
         this.x = x;
         this.y = y;
+        this.targetY = targetY; // Position where it should stop
         this.type = type;
         this.level = level;
         this.size = 15;
@@ -881,19 +882,19 @@ class GroundEnemy {
         this.targetAngle = 0;
         this.isGround = true; // Flag to identify ground enemies
 
-        // Scrolling behavior - ground enemies scroll UPWARD
-        this.scrollSpeed = 1.5; // Speed when scrolling up (地面がスクロール)
+        // Scrolling behavior
+        this.state = 'scrolling'; // 'scrolling' or 'stationary'
+        this.scrollSpeed = 1.5; // Speed when scrolling down
 
         // Visual properties
         this.baseColor = type === 'core' ? color(255, 50, 50) : color(150, 150, 200);
     }
 
     update() {
-        // Ground enemies scroll UPWARD (地面が上にスクロール)
-        // They appear from bottom and move up, like terrain scrolling
-        this.y -= this.scrollSpeed;
+        // Always scroll down slowly - never stop
+        this.y += this.scrollSpeed;
 
-        // Track player for aiming while on screen
+        // Track player for aiming while scrolling
         if (player && player.alive && this.y > 0 && this.y < GAME_HEIGHT) {
             this.targetAngle = atan2(player.y - this.y, player.x - this.x);
             // Smooth rotation
@@ -904,7 +905,7 @@ class GroundEnemy {
             this.angle += angleDiff * 0.1;
         }
 
-        // Update shoot timer and shoot when ready (only when visible on screen)
+        // Update shoot timer and shoot when ready
         if (this.canShoot && this.y > 0 && this.y < GAME_HEIGHT) {
             this.shootTimer++;
             if (this.shootTimer >= this.shootInterval) {
@@ -1002,8 +1003,8 @@ class GroundEnemy {
             return true;
         }
 
-        // Remove if scrolled past TOP of screen (ground enemies scroll upward)
-        if (this.y < -50) {
+        // Remove if scrolled past bottom of screen
+        if (this.y > GAME_HEIGHT + 50) {
             return true;
         }
 
@@ -1281,8 +1282,8 @@ class SpecialAIAI {
     }
 
     update() {
-        // Slowly scroll UPWARD (ground objects scroll up)
-        this.y -= this.scrollSpeed;
+        // Slowly scroll down
+        this.y += this.scrollSpeed;
 
         // Rotate for visual effect
         this.angle += 0.02;
@@ -1367,8 +1368,7 @@ class SpecialAIAI {
     }
 
     isOffscreen() {
-        // AI-AI scrolls upward (ground enemy)
-        return this.y < -50;
+        return this.y > GAME_HEIGHT + 50;
     }
 }
 
@@ -1392,8 +1392,8 @@ class SupplyBase {
     }
 
     update() {
-        // Scroll UPWARD with area speed (ground objects scroll up)
-        this.y -= this.scrollSpeed;
+        // Scroll down with area speed
+        this.y += this.scrollSpeed;
     }
 
     shoot() {
@@ -1448,8 +1448,7 @@ class SupplyBase {
     }
 
     isOffscreen() {
-        // Supply Base scrolls upward (ground enemy)
-        return this.y < -50;
+        return this.y > GAME_HEIGHT + 50;
     }
 }
 

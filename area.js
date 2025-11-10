@@ -254,12 +254,13 @@ class AreaManager {
 
     spawnGroundEnemy() {
         let x = random(50, GAME_WIDTH - 50);
-        let y = GAME_HEIGHT + 40; // Spawn BELOW screen (ground enemies scroll UP)
+        let y = -40; // Spawn above screen
+        let targetY = GAME_HEIGHT - 60; // Target position near bottom
         let type = random() < 0.3 ? 'core' : 'turret';
         let level = this.currentArea;
 
         // Pass scroll speed to ground enemy
-        let enemy = new GroundEnemy(x, y, type, level);
+        let enemy = new GroundEnemy(x, y, type, level, targetY);
         enemy.scrollSpeed = this.scrollSpeed;
         this.groundEnemies.push(enemy);
     }
@@ -267,7 +268,7 @@ class AreaManager {
     spawnAIAI() {
         // Spawn special AI-AI enemy at screen edge (left or right)
         let x = random() < 0.5 ? 30 : GAME_WIDTH - 30; // Left or right edge
-        let y = GAME_HEIGHT + 40; // Spawn BELOW screen (ground enemies scroll UP)
+        let y = -40; // Spawn above screen
         this.groundEnemies.push(new SpecialAIAI(x, y));
     }
 
@@ -377,7 +378,7 @@ class AreaManager {
         for (let base of pattern) {
             // Check if this base should spawn at current progress
             if (this.areaProgress === base.progress && !this.supplyBasesSpawned.includes(base.progress)) {
-                this.groundEnemies.push(new SupplyBase(base.x, GAME_HEIGHT + 40, this.scrollSpeed));
+                this.groundEnemies.push(new SupplyBase(base.x, -40, this.scrollSpeed));
                 this.supplyBasesSpawned.push(base.progress);
             }
         }
