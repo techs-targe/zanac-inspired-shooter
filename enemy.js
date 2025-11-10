@@ -1042,6 +1042,7 @@ class BossEnemy {
         this.scoreValue = 10000 + areaNumber * 5000;
         this.canShoot = true;
         this.shootInterval = 30;
+        this.shootTimer = 0; // Individual shoot timer for boss
         this.speed = 1;
         this.phase = 0; // Attack pattern phase
         this.phaseTimer = 0;
@@ -1224,6 +1225,15 @@ class BossEnemy {
         this.y = constrain(this.y, this.size, GAME_HEIGHT / 3);
 
         this.attackCooldown--;
+
+        // Update shoot timer and shoot when ready
+        if (this.canShoot && this.y >= this.targetY) {
+            this.shootTimer++;
+            if (this.shootTimer >= this.shootInterval) {
+                this.shoot();
+                this.shootTimer = 0; // Reset timer
+            }
+        }
     }
 
     shoot() {

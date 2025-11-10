@@ -574,11 +574,12 @@ class AreaManager {
         const centerX = GAME_WIDTH / 2;
         const ySpacing = 60;
         const bottomY = GAME_HEIGHT - 80;
-        const startOffsetY = -1800; // Increased from -1200 to ensure full scroll display
+        const startOffsetY = -900; // Spawn above screen (adjusted for proper display)
 
         // Helper to calculate initial spawn Y position (above screen)
+        // All enemies spawn at startOffsetY + their vertical offset
         const getInitialY = (finalY) => {
-            return startOffsetY + (finalY - bottomY);
+            return finalY + startOffsetY;
         };
 
         // Hardcoded formations per area
