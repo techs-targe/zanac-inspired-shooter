@@ -15,8 +15,8 @@ class InputManager {
         // Touch control state
         this.touchButtons = {
             dpad: { x: 80, y: 0, size: 100 },   // Smaller D-pad
-            buttonA: { x: 0, y: 0, size: 20 },  // Main fire
-            buttonB: { x: 0, y: 0, size: 20 },  // Sub fire
+            buttonA: { x: 0, y: 0, size: 25 },  // Main fire
+            buttonB: { x: 0, y: 0, size: 25 },  // Sub fire
             pauseBtn: { x: 0, y: 0, size: 20 }  // Pause button
         };
 
@@ -87,8 +87,8 @@ class InputManager {
             this.touchButtons.buttonB.x = rect.width - 60;
             this.touchButtons.buttonB.y = buttonY;
 
-            // A button (main fire, red) - far right
-            this.touchButtons.buttonA.x = rect.width - 20;
+            // A button (main fire, red) - at right edge
+            this.touchButtons.buttonA.x = rect.width;
             this.touchButtons.buttonA.y = buttonY;
         }, 100);
 
