@@ -241,14 +241,15 @@ class Enemy {
                 this.size = 13;
                 this.hp = int(5 * this.difficultyMultiplier);
                 this.maxHp = this.hp;
-                this.speed = 1.0 * this.difficultyMultiplier;
+                this.speed = 0.5 * this.difficultyMultiplier; // 0.5に減速（長く画面内に留まる）
                 this.scoreValue = 180;
                 this.color = color(255, 200, 50);
                 this.canShoot = true;
                 this.shootInterval = int(8 / this.difficultyMultiplier); // 猛烈な連射（16連射）
                 this.bulletType = 'sig';
                 this.trackPlayer = true; // X座標を合わせる
-                this.rapidFireRange = 30; // 正面30pxの範囲で連射
+                this.rapidFireRange = 50; // 50pxに拡大（より広い範囲で連射）
+                this.trackSpeed = 4; // 追跡速度を設定
                 break;
 
             case 'degeed':
@@ -409,13 +410,14 @@ class Enemy {
                 break;
 
             case 'takuwashi':
-                // タクワーシ：自機のX座標に合わせる
+                // タクワーシ：自機のX座標に合わせる（積極的に近づく）
                 this.y += this.speed;
                 if (player && player.alive) {
                     let dx = player.x - this.x;
-                    if (abs(dx) > this.rapidFireRange) {
-                        // 正面にいない場合は左右に移動
-                        this.x += dx > 0 ? 3 : -3;
+                    // 常にプレイヤーの方向に移動（逃げない）
+                    if (abs(dx) > 5) { // 5px以上離れていたら追跡
+                        let moveSpeed = this.trackSpeed || 4;
+                        this.x += dx > 0 ? moveSpeed : -moveSpeed;
                     }
                 }
                 break;
@@ -914,7 +916,7 @@ class GroundEnemy {
         let vy = sin(this.angle) * speed;
 
         if (this.type === 'core') {
-            // Core shoots triple spread
+            // Core shoots triple spread (シグ弾)
             for (let i = -1; i <= 1; i++) {
                 let spreadAngle = this.angle + i * 0.3;
                 enemyBullets.push(new Bullet(
@@ -923,18 +925,22 @@ class GroundEnemy {
                     cos(spreadAngle) * speed,
                     sin(spreadAngle) * speed,
                     false,
-                    1
+                    1,
+                    4,
+                    'sig' // 地上敵も全弾シグ
                 ));
             }
         } else {
-            // Turret shoots single aimed shot
+            // Turret shoots single aimed shot (シグ弾)
             enemyBullets.push(new Bullet(
                 this.x + cos(this.angle) * this.size,
                 this.y + sin(this.angle) * this.size,
                 vx,
                 vy,
                 false,
-                1
+                1,
+                4,
+                'sig' // 地上敵も全弾シグ
             ));
         }
     }
@@ -1099,7 +1105,7 @@ class BossEnemy {
         let speed = 4.5; // Reduced from 6 to 4.5 (75% speed)
 
         switch(this.phase) {
-            case 1: // Phase 1 - aimed shots
+            case 1: // Phase 1 - aimed shots (シグ弾)
                 {
                     let angle = atan2(player.y - this.y, player.x - this.x);
                     enemyBullets.push(new Bullet(
@@ -1108,12 +1114,14 @@ class BossEnemy {
                         cos(angle) * speed,
                         sin(angle) * speed,
                         false,
-                        1
+                        1,
+                        5,
+                        'sig' // エリア1,2,3ボス全弾シグ
                     ));
                 }
                 break;
 
-            case 2: // Phase 2 - spread pattern
+            case 2: // Phase 2 - spread pattern (シグ弾)
                 for (let i = -2; i <= 2; i++) {
                     let angle = atan2(player.y - this.y, player.x - this.x) + i * 0.3;
                     enemyBullets.push(new Bullet(
@@ -1122,12 +1130,14 @@ class BossEnemy {
                         cos(angle) * speed,
                         sin(angle) * speed,
                         false,
-                        1
+                        1,
+                        5,
+                        'sig' // エリア1,2,3ボス全弾シグ
                     ));
                 }
                 break;
 
-            case 3: // Phase 3 - circular barrage
+            case 3: // Phase 3 - circular barrage (シグ弾)
                 for (let i = 0; i < 8; i++) {
                     let angle = (i / 8) * TWO_PI + this.angle;
                     enemyBullets.push(new Bullet(
@@ -1136,7 +1146,9 @@ class BossEnemy {
                         cos(angle) * speed,
                         sin(angle) * speed,
                         false,
-                        1
+                        1,
+                        5,
+                        'sig' // エリア1,2,3ボス全弾シグ
                     ));
                 }
                 break;
