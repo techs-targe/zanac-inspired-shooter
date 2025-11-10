@@ -393,9 +393,9 @@ class Player {
             bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 16, 0.2));
         }
 
-        // Time decreases by 1 second (60 frames) per shot
+        // Time decreases by 0.5 seconds (30 frames) per shot - 2x duration
         if (this.subWeaponTime > 0) {
-            this.subWeaponTime -= 60;
+            this.subWeaponTime -= 30;
             if (this.subWeaponTime <= 0) {
                 this.resetToWeapon0();
             }
