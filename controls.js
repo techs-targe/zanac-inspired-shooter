@@ -14,10 +14,10 @@ class InputManager {
 
         // Touch control state
         this.touchButtons = {
-            dpad: { x: 80, y: 0, size: 100 },   // Smaller D-pad
-            buttonA: { x: 0, y: 0, size: 25 },  // Main fire
-            buttonB: { x: 0, y: 0, size: 25 },  // Sub fire
-            pauseBtn: { x: 0, y: 0, size: 20 }  // Pause button
+            dpad: { x: 80, y: 0, size: 120 },   // D-pad
+            buttonA: { x: 0, y: 0, size: 40 },  // Main fire (larger)
+            buttonB: { x: 0, y: 0, size: 40 },  // Sub fire (larger)
+            pauseBtn: { x: 0, y: 0, size: 25 }  // Pause button
         };
 
         // Active touches for each button
@@ -69,26 +69,24 @@ class InputManager {
         setTimeout(() => {
             const rect = canvas.getBoundingClientRect();
 
-            // Position all controls at the very bottom edge
-            const bottomY = rect.height - 20;
+            // Position all controls at the very bottom edge (rect.height)
+            // D-pad on bottom left - center at bottom edge
+            this.touchButtons.dpad.x = this.touchButtons.dpad.size / 2 + 10;
+            this.touchButtons.dpad.y = rect.height;
 
-            // D-pad on bottom left
-            this.touchButtons.dpad.x = 80;
-            this.touchButtons.dpad.y = rect.height - 60;
-
-            // All action buttons on the same Y level at bottom
-            const buttonY = rect.height - 20;
+            // All action buttons at the very bottom (rect.height)
+            const buttonY = rect.height;
 
             // Pause button at bottom center
             this.touchButtons.pauseBtn.x = rect.width / 2;
             this.touchButtons.pauseBtn.y = buttonY;
 
             // B button (sub fire, blue) - right side, left of A
-            this.touchButtons.buttonB.x = rect.width - 60;
+            this.touchButtons.buttonB.x = rect.width - this.touchButtons.buttonA.size * 2 - this.touchButtons.buttonB.size - 20;
             this.touchButtons.buttonB.y = buttonY;
 
             // A button (main fire, red) - at right edge
-            this.touchButtons.buttonA.x = rect.width;
+            this.touchButtons.buttonA.x = rect.width - this.touchButtons.buttonA.size - 10;
             this.touchButtons.buttonA.y = buttonY;
         }, 100);
 
@@ -108,26 +106,32 @@ class InputManager {
             const x = touch.clientX - rect.left;
             const y = touch.clientY - rect.top;
 
-            // Check D-pad
-            this.checkDpad(x, y, touch.identifier);
+            // Check each button in priority order (first match wins)
+            // Priority: A button > B button > Pause > D-pad
 
             // Check A button (main fire)
             if (this.isInsideButton(x, y, this.touchButtons.buttonA)) {
                 this.mainFire = true;
                 this.activeTouches.mainFire = touch.identifier;
+                continue; // Skip other checks for this touch
             }
 
             // Check B button (sub fire)
             if (this.isInsideButton(x, y, this.touchButtons.buttonB)) {
                 this.subFire = true;
                 this.activeTouches.subFire = touch.identifier;
+                continue; // Skip other checks for this touch
             }
 
-            // Check pause button
-            if (this.isInsideButton(x, y, this.touchButtons.pauseBtn)) {
+            // Check pause button (only trigger once per touch)
+            if (this.isInsideButton(x, y, this.touchButtons.pauseBtn) && !this.activeTouches.pause) {
                 this.pause = true;
                 this.activeTouches.pause = touch.identifier;
+                continue; // Skip other checks for this touch
             }
+
+            // Check D-pad (lowest priority)
+            this.checkDpad(x, y, touch.identifier);
         }
     }
 
@@ -237,7 +241,8 @@ class InputManager {
     isInsideButton(x, y, button) {
         const dx = x - button.x;
         const dy = y - button.y;
-        return Math.sqrt(dx * dx + dy * dy) < button.size;
+        // Use diameter (size * 2) for hit detection to match visual size
+        return Math.sqrt(dx * dx + dy * dy) < (button.size * 2);
     }
 
     update() {
@@ -292,11 +297,14 @@ class InputManager {
     }
 
     resetFrame() {
-        // Reset states that are not continuous (like pause)
-        // Movement and fire buttons stay pressed if held
-        this.pause = false;
+        // Only reset pause button (one-time press)
+        // Don't reset other buttons here - they are managed by touch/keyboard/gamepad events
+        if (!this.activeTouches.pause) {
+            this.pause = false;
+        }
 
-        // Reset keyboard-only states at start of frame
+        // Reset keyboard/gamepad states only if no touch is active
+        // This allows keyboard to work alongside touch controls
         if (!this.activeTouches.left && !this.isGamepadLeft()) this.left = false;
         if (!this.activeTouches.right && !this.isGamepadRight()) this.right = false;
         if (!this.activeTouches.up && !this.isGamepadUp()) this.up = false;
