@@ -1104,6 +1104,10 @@ class BossEnemy {
 
         let speed = 4.5; // Reduced from 6 to 4.5 (75% speed)
 
+        // エリア1-3: 全弾シグ
+        // エリア4-12: 攻撃パターンによってシグ/リード使い分け
+        let isEarlyArea = this.areaNumber <= 3;
+
         switch(this.phase) {
             case 1: // Phase 1 - aimed shots (シグ弾)
                 {
@@ -1116,14 +1120,16 @@ class BossEnemy {
                         false,
                         1,
                         5,
-                        'sig' // エリア1,2,3ボス全弾シグ
+                        'sig' // Phase 1は全エリアでシグ
                     ));
                 }
                 break;
 
-            case 2: // Phase 2 - spread pattern (シグ弾)
+            case 2: // Phase 2 - spread pattern (エリア4-12: 外側リード、中央シグ)
                 for (let i = -2; i <= 2; i++) {
                     let angle = atan2(player.y - this.y, player.x - this.x) + i * 0.3;
+                    // エリア1-3: 全弾シグ / エリア4-12: 外側(-2,2)リード、中央(-1,0,1)シグ
+                    let bulletType = (isEarlyArea || (i >= -1 && i <= 1)) ? 'sig' : 'lead';
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y + this.size / 2,
@@ -1132,14 +1138,16 @@ class BossEnemy {
                         false,
                         1,
                         5,
-                        'sig' // エリア1,2,3ボス全弾シグ
+                        bulletType
                     ));
                 }
                 break;
 
-            case 3: // Phase 3 - circular barrage (シグ弾)
+            case 3: // Phase 3 - circular barrage (エリア4-12: 偶数リード、奇数シグ)
                 for (let i = 0; i < 8; i++) {
                     let angle = (i / 8) * TWO_PI + this.angle;
+                    // エリア1-3: 全弾シグ / エリア4-12: 偶数(0,2,4,6)リード、奇数(1,3,5,7)シグ
+                    let bulletType = (isEarlyArea || i % 2 === 1) ? 'sig' : 'lead';
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
@@ -1148,7 +1156,7 @@ class BossEnemy {
                         false,
                         1,
                         5,
-                        'sig' // エリア1,2,3ボス全弾シグ
+                        bulletType
                     ));
                 }
                 break;
