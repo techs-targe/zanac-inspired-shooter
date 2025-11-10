@@ -369,7 +369,21 @@ class InputManager {
                 text(`Gamepad: ${gamepad.id.substring(0, 20)}`, width - 10, 120);
                 text(`Connected: ${this.gamepadIndex}`, width - 10, 132);
 
-                // Show active inputs
+                // Show raw gamepad state
+                text(`Axes: [${gamepad.axes[0].toFixed(2)}, ${gamepad.axes[1].toFixed(2)}]`, width - 10, 144);
+
+                // Show pressed buttons
+                let pressedButtons = [];
+                for (let i = 0; i < gamepad.buttons.length; i++) {
+                    if (gamepad.buttons[i].pressed) {
+                        pressedButtons.push(i);
+                    }
+                }
+                if (pressedButtons.length > 0) {
+                    text(`Buttons: [${pressedButtons.join(',')}]`, width - 10, 156);
+                }
+
+                // Show active inputs (what the game sees)
                 let inputs = [];
                 if (this.left) inputs.push('L');
                 if (this.right) inputs.push('R');
@@ -378,8 +392,10 @@ class InputManager {
                 if (this.mainFire) inputs.push('A');
                 if (this.subFire) inputs.push('B');
                 if (inputs.length > 0) {
-                    text(`Input: ${inputs.join(',')}`, width - 10, 144);
+                    text(`Input: ${inputs.join(',')}`, width - 10, 168);
                 }
+            } else {
+                text('Gamepad: Object is null!', width - 10, 120);
             }
         } else {
             text('Gamepad: Not connected', width - 10, 120);
