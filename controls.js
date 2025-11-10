@@ -454,25 +454,17 @@ class InputManager {
         text(`A:(${this.touchButtons.buttonA.x.toFixed(0)},${this.touchButtons.buttonA.y.toFixed(0)})`, 10, 180);
         text(`B:(${this.touchButtons.buttonB.x.toFixed(0)},${this.touchButtons.buttonB.y.toFixed(0)})`, 10, 192);
 
-        // D-pad
+        // D-pad (simple circle - touch anywhere to move in that direction)
         const dpad = this.touchButtons.dpad;
         fill(255, 255, 255, 30);
         stroke(255, 255, 255, 100);
         strokeWeight(2);
-        ellipse(dpad.x, dpad.y, dpad.size * 2, dpad.size * 2); // FIXED: size * 2 for diameter
+        ellipse(dpad.x, dpad.y, dpad.size * 2, dpad.size * 2);
 
-        // D-pad directions (scaled to match new size: radius 60)
-        fill(255, 255, 255, this.left ? 80 : 30);
-        triangle(dpad.x - 40, dpad.y, dpad.x - 20, dpad.y - 10, dpad.x - 20, dpad.y + 10);
-
-        fill(255, 255, 255, this.right ? 80 : 30);
-        triangle(dpad.x + 40, dpad.y, dpad.x + 20, dpad.y - 10, dpad.x + 20, dpad.y + 10);
-
-        fill(255, 255, 255, this.up ? 80 : 30);
-        triangle(dpad.x, dpad.y - 40, dpad.x - 10, dpad.y - 20, dpad.x + 10, dpad.y - 20);
-
-        fill(255, 255, 255, this.down ? 80 : 30);
-        triangle(dpad.x, dpad.y + 40, dpad.x - 10, dpad.y + 20, dpad.x + 10, dpad.y + 20);
+        // Optional: Show center point for reference
+        fill(255, 255, 255, 150);
+        noStroke();
+        ellipse(dpad.x, dpad.y, 8, 8);
 
         // A button (main fire)
         const btnA = this.touchButtons.buttonA;
