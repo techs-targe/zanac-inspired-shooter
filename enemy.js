@@ -245,10 +245,10 @@ class Enemy {
                 this.scoreValue = 180;
                 this.color = color(255, 200, 50);
                 this.canShoot = true;
-                this.shootInterval = int(8 / this.difficultyMultiplier); // 猛烈な連射（16連射）
+                this.shootInterval = max(4, int(4 / this.difficultyMultiplier)); // 猛烈な連射（16連射: 60fps/4=15発/秒）
                 this.bulletType = 'sig';
                 this.trackPlayer = true; // X座標を合わせる
-                this.rapidFireRange = 50; // 50pxに拡大（より広い範囲で連射）
+                this.rapidFireRange = 30; // 30pxに縮小（より正確に正面に来る必要がある）
                 this.trackSpeed = 4; // 追跡速度を設定
                 break;
 
@@ -418,6 +418,8 @@ class Enemy {
                     if (abs(dx) > 5) { // 5px以上離れていたら追跡
                         let moveSpeed = this.trackSpeed || 4;
                         this.x += dx > 0 ? moveSpeed : -moveSpeed;
+                        // 画面端制約を追加（画面外に出ないようにする）
+                        this.x = constrain(this.x, this.size, GAME_WIDTH - this.size);
                     }
                 }
                 break;
@@ -504,7 +506,7 @@ class Enemy {
                 break;
 
             case 'spiral':
-                // Rotating shot
+                // Rotating shot - now fires LEAD bullets
                 let spiralAngle = this.angle;
                 enemyBullets.push(new Bullet(
                     this.x,
@@ -513,15 +515,18 @@ class Enemy {
                     sin(spiralAngle) * speed,
                     false,
                     1,
-                    4,
-                    'sig' // シグ弾
+                    5,
+                    'lead' // リード弾（回転パターンで回避困難）
                 ));
                 break;
 
             case 'bomber':
-                // 5-way spread
+                // 5-way spread - outer bullets are LEAD, center are SIG
                 for (let i = 0; i < 5; i++) {
                     let bombAngle = angle - 0.6 + i * 0.3;
+                    // Outer 2 bullets (i=0, i=4) are LEAD, center 3 (i=1,2,3) are SIG
+                    let bulletType = (i === 0 || i === 4) ? 'lead' : 'sig';
+                    let bulletSize = bulletType === 'lead' ? 5 : 4;
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
@@ -529,14 +534,16 @@ class Enemy {
                         sin(bombAngle) * speed,
                         false,
                         1,
-                        4,
-                        'sig' // シグ弾
+                        bulletSize,
+                        bulletType
                     ));
                 }
                 break;
 
             case 'tracker':
-                // Aimed shot
+                // Aimed shot - alternates between SIG and LEAD
+                let trackerBulletType = (frameCount % 4 < 2) ? 'sig' : 'lead';
+                let trackerBulletSize = trackerBulletType === 'lead' ? 5 : 4;
                 enemyBullets.push(new Bullet(
                     this.x,
                     this.y,
@@ -544,8 +551,8 @@ class Enemy {
                     sin(angle) * speed,
                     false,
                     1,
-                    4,
-                    'sig' // シグ弾
+                    trackerBulletSize,
+                    trackerBulletType
                 ));
                 break;
 
@@ -983,16 +990,7 @@ class GroundEnemy {
         fill(255, 255, 255, 150);
         ellipse(this.x, this.y, this.size * 0.5, this.size * 0.5);
 
-        // HP bar
-        if (this.hp < this.maxHp) {
-            fill(255, 100, 100);
-            rectMode(CENTER);
-            rect(this.x, this.y - this.size - 5, this.size * 2, 3);
-
-            fill(100, 255, 100);
-            let hpWidth = map(this.hp, 0, this.maxHp, 0, this.size * 2);
-            rect(this.x - (this.size * 2 - hpWidth) / 2, this.y - this.size - 5, hpWidth, 3);
-        }
+        // HP bar removed for ground enemies (ジグの耐久力は表示しない)
 
         pop();
     }
