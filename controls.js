@@ -17,7 +17,7 @@ class InputManager {
             dpad: { x: 80, y: 0, size: 60 },    // D-pad (radius 60, diameter 120)
             buttonA: { x: 0, y: 0, size: 40 },  // Main fire (radius 40, diameter 80)
             buttonB: { x: 0, y: 0, size: 40 },  // Sub fire (radius 40, diameter 80)
-            pauseBtn: { x: 0, y: 0, size: 25 }  // Pause button (radius 25, diameter 50)
+            pauseBtn: { x: 0, y: 0, size: 35 }  // Pause button (radius 35, diameter 70) - LARGER!
         };
 
         // Active touches for each button
@@ -115,9 +115,9 @@ class InputManager {
                 continue; // Skip other checks for this touch
             }
 
-            // Check pause button (only trigger once per touch)
+            // Check pause button
             let distP = Math.sqrt((x - this.touchButtons.pauseBtn.x)**2 + (y - this.touchButtons.pauseBtn.y)**2);
-            if (this.isInsideButton(x, y, this.touchButtons.pauseBtn) && !this.activeTouches.pause) {
+            if (this.isInsideButton(x, y, this.touchButtons.pauseBtn)) {
                 console.log(`  → Pause button pressed (dist:${distP.toFixed(1)}, threshold:${(this.touchButtons.pauseBtn.size * 1.2).toFixed(1)})`);
                 this.pause = true;
                 this.activeTouches.pause = touch.identifier;
