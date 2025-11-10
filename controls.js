@@ -45,12 +45,15 @@ class InputManager {
 
         // Setup gamepad detection
         window.addEventListener('gamepadconnected', (e) => {
-            console.log('Gamepad connected:', e.gamepad.id);
+            console.log('🎮 Gamepad connected:', e.gamepad.id);
+            console.log('   Index:', e.gamepad.index);
+            console.log('   Buttons:', e.gamepad.buttons.length);
+            console.log('   Axes:', e.gamepad.axes.length);
             this.gamepadIndex = e.gamepad.index;
         });
 
         window.addEventListener('gamepaddisconnected', (e) => {
-            console.log('Gamepad disconnected');
+            console.log('🎮 Gamepad disconnected:', e.gamepad.id);
             this.gamepadIndex = -1;
         });
     }
@@ -297,20 +300,17 @@ class InputManager {
     }
 
     resetFrame() {
-        // Only reset pause button (one-time press)
-        // Don't reset other buttons here - they are managed by touch/keyboard/gamepad events
-        if (!this.activeTouches.pause) {
-            this.pause = false;
-        }
+        // Pause is always reset (one-time trigger)
+        this.pause = false;
 
-        // Reset keyboard/gamepad states only if no touch is active
-        // This allows keyboard to work alongside touch controls
-        if (!this.activeTouches.left && !this.isGamepadLeft()) this.left = false;
-        if (!this.activeTouches.right && !this.isGamepadRight()) this.right = false;
-        if (!this.activeTouches.up && !this.isGamepadUp()) this.up = false;
-        if (!this.activeTouches.down && !this.isGamepadDown()) this.down = false;
-        if (!this.activeTouches.mainFire && !this.isGamepadMainFire()) this.mainFire = false;
-        if (!this.activeTouches.subFire && !this.isGamepadSubFire()) this.subFire = false;
+        // For other inputs: reset if not actively touched
+        // (keyboard and gamepad states will be re-evaluated in update())
+        if (!this.activeTouches.left) this.left = false;
+        if (!this.activeTouches.right) this.right = false;
+        if (!this.activeTouches.up) this.up = false;
+        if (!this.activeTouches.down) this.down = false;
+        if (!this.activeTouches.mainFire) this.mainFire = false;
+        if (!this.activeTouches.subFire) this.subFire = false;
     }
 
     isGamepadLeft() {
@@ -359,6 +359,38 @@ class InputManager {
         if (!gamepad) return false;
         return (gamepad.buttons[1] && gamepad.buttons[1].pressed) ||
                (gamepad.buttons[3] && gamepad.buttons[3].pressed);
+    }
+
+    drawDebugInfo() {
+        // Draw gamepad connection status (top-right corner)
+        push();
+        fill(255, 255, 100);
+        textSize(10);
+        textAlign(RIGHT, TOP);
+
+        if (this.gamepadIndex >= 0) {
+            const gamepad = navigator.getGamepads()[this.gamepadIndex];
+            if (gamepad) {
+                text(`Gamepad: ${gamepad.id.substring(0, 20)}`, width - 10, 120);
+                text(`Connected: ${this.gamepadIndex}`, width - 10, 132);
+
+                // Show active inputs
+                let inputs = [];
+                if (this.left) inputs.push('L');
+                if (this.right) inputs.push('R');
+                if (this.up) inputs.push('U');
+                if (this.down) inputs.push('D');
+                if (this.mainFire) inputs.push('A');
+                if (this.subFire) inputs.push('B');
+                if (inputs.length > 0) {
+                    text(`Input: ${inputs.join(',')}`, width - 10, 144);
+                }
+            }
+        } else {
+            text('Gamepad: Not connected', width - 10, 120);
+        }
+
+        pop();
     }
 
     drawTouchControls() {

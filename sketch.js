@@ -120,6 +120,11 @@ function draw() {
     if (inputManager && inputManager.isMobile) {
         inputManager.drawTouchControls();
     }
+
+    // Draw gamepad debug info (always show when gamepad is connected)
+    if (inputManager && inputManager.gamepadIndex >= 0) {
+        inputManager.drawDebugInfo();
+    }
 }
 
 function initGame() {
