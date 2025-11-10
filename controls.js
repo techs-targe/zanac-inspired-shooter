@@ -69,25 +69,24 @@ class InputManager {
         setTimeout(() => {
             const rect = canvas.getBoundingClientRect();
 
-            // Position controls at the very bottom of the screen
-            const bottomMargin = 70;  // Margin from bottom
-            const sideMargin = 70;     // Margin from sides
+            // Position all controls at the very bottom to avoid screen overlap
+            const bottomY = rect.height - 60;  // Base Y position for all controls
 
             // D-pad on bottom left
-            this.touchButtons.dpad.x = sideMargin;
-            this.touchButtons.dpad.y = rect.height - bottomMargin;
-
-            // B button (sub fire) on bottom right, higher position
-            this.touchButtons.buttonB.x = rect.width - sideMargin;
-            this.touchButtons.buttonB.y = rect.height - bottomMargin - 50;
-
-            // A button (main fire) on bottom right, lower position
-            this.touchButtons.buttonA.x = rect.width - sideMargin - 60;
-            this.touchButtons.buttonA.y = rect.height - bottomMargin;
+            this.touchButtons.dpad.x = 70;
+            this.touchButtons.dpad.y = bottomY;
 
             // Pause button at bottom center
             this.touchButtons.pauseBtn.x = rect.width / 2;
-            this.touchButtons.pauseBtn.y = rect.height - 25;
+            this.touchButtons.pauseBtn.y = bottomY;
+
+            // B button (sub fire) on bottom right, slightly above
+            this.touchButtons.buttonB.x = rect.width - 65;
+            this.touchButtons.buttonB.y = bottomY - 35;
+
+            // A button (main fire) on bottom right, below B
+            this.touchButtons.buttonA.x = rect.width - 65;
+            this.touchButtons.buttonA.y = bottomY + 35;
         }, 100);
 
         // Touch event handlers

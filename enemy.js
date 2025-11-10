@@ -1265,6 +1265,9 @@ class PowerBoxFormation {
         for (let box of this.boxes) {
             box.update();
         }
+
+        // Remove destroyed boxes (HP <= 0)
+        this.boxes = this.boxes.filter(box => box.hp > 0);
     }
 
     draw() {

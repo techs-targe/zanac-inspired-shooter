@@ -60,24 +60,31 @@ function draw() {
         inputManager.resetFrame();
         inputManager.update();
 
-        // Handle pause from input manager
+        // Handle game state transitions from input
+        let stateChanged = false;
+
+        // Pause button handling
         if (inputManager.pause) {
             if (gameState === GAME_STATE.TITLE) {
-                // Start game from title screen
+                // Start game from title screen with pause button
                 gameState = GAME_STATE.PLAYING;
                 initGame();
+                stateChanged = true;
             } else if (gameState === GAME_STATE.PLAYING) {
                 gameState = GAME_STATE.PAUSED;
+                stateChanged = true;
             } else if (gameState === GAME_STATE.PAUSED) {
                 gameState = GAME_STATE.PLAYING;
+                stateChanged = true;
             } else if (gameState === GAME_STATE.GAME_OVER) {
                 // Return to title from game over
                 gameState = GAME_STATE.TITLE;
+                stateChanged = true;
             }
         }
 
-        // Also allow main fire button to start game (mobile friendly)
-        if (inputManager.mainFire || inputManager.subFire) {
+        // Also allow main fire or sub fire button to start game (mobile friendly)
+        if (!stateChanged && (inputManager.mainFire || inputManager.subFire)) {
             if (gameState === GAME_STATE.TITLE) {
                 gameState = GAME_STATE.PLAYING;
                 initGame();
@@ -817,17 +824,18 @@ function checkCollisions() {
                 }
             }
         }
+    }
 
-        // PowerBox vs player (special collision handling)
-        if (areaManager && areaManager.powerBoxFormations) {
-            for (let formation of areaManager.powerBoxFormations) {
-                for (let box of formation.getBoxes()) {
-                    if (box.hp > 0) {
-                        // Use PowerBox's special collision method
-                        if (box.checkPlayerCollision(player)) {
-                            // Collision was handled by PowerBox (either bonus or damage)
-                            // Note: checkPlayerCollision handles all logic including damage/bonus
-                        }
+    // PowerBox vs player (special collision handling)
+    // IMPORTANT: This is OUTSIDE the invulnerability check - boxes must be destroyed even when player is invulnerable
+    if (player.alive && areaManager && areaManager.powerBoxFormations) {
+        for (let formation of areaManager.powerBoxFormations) {
+            for (let box of formation.getBoxes()) {
+                if (box.hp > 0) {
+                    // Use PowerBox's special collision method
+                    if (box.checkPlayerCollision(player)) {
+                        // Collision was handled by PowerBox (either bonus or damage)
+                        // Note: checkPlayerCollision handles all logic including damage/bonus
                     }
                 }
             }
