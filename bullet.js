@@ -52,23 +52,56 @@ class Bullet {
         } else {
             // Enemy bullets - different appearance based on type
             if (this.bulletType === 'sig') {
-                // シグ（ミサイル）- オレンジ色、破壊可能
+                // シグ（ミサイル）- オレンジ色、ロケット型、破壊可能
+                push();
+                translate(this.x, this.y);
+
+                // Calculate angle based on velocity for missile direction
+                let angle = atan2(this.vy, this.vx);
+                rotate(angle);
+
+                // Missile body (elongated)
                 fill(255, 150, 50);
-                ellipse(this.x, this.y, this.size * 1.2, this.size * 1.2);
+                rectMode(CENTER);
+                rect(0, 0, this.size * 2.5, this.size * 1.2);
 
-                fill(255, 200, 100, 200);
-                ellipse(this.x, this.y, this.size * 0.7, this.size * 0.7);
+                // Missile tip (pointed)
+                fill(255, 100, 0);
+                triangle(
+                    this.size * 1.25, 0,
+                    this.size * 0.4, -this.size * 0.6,
+                    this.size * 0.4, this.size * 0.6
+                );
 
-                // Glow
-                fill(255, 150, 50, 100);
-                ellipse(this.x, this.y, this.size * 2, this.size * 2);
+                // Missile fins
+                fill(255, 80, 0);
+                triangle(
+                    -this.size * 1.25, 0,
+                    -this.size * 0.7, -this.size * 0.8,
+                    -this.size * 0.7, 0
+                );
+                triangle(
+                    -this.size * 1.25, 0,
+                    -this.size * 0.7, this.size * 0.8,
+                    -this.size * 0.7, 0
+                );
+
+                // Center highlight
+                fill(255, 200, 100, 180);
+                ellipse(0, 0, this.size * 0.8, this.size * 0.6);
+
+                pop();
+
+                // Glow effect (not rotated)
+                fill(255, 150, 50, 80);
+                ellipse(this.x, this.y, this.size * 3, this.size * 2);
 
                 // HP indicator (if damaged)
                 if (this.hp < this.maxHp) {
                     fill(255, 255, 0);
-                    textSize(8);
-                    textAlign(CENTER);
-                    text(this.hp, this.x, this.y - this.size - 3);
+                    textSize(10);
+                    textAlign(CENTER, CENTER);
+                    text(this.hp, this.x, this.y - this.size * 1.5);
                 }
             } else if (this.bulletType === 'lead') {
                 // リード（しだれ弾）- 青紫色、基本破壊不能

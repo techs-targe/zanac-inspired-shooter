@@ -784,6 +784,48 @@ function checkCollisions() {
         }
     }
 
+    // Player bullets vs enemy bullets (bullet-on-bullet collision)
+    // Check if player bullets can destroy enemy bullets (Sig bullets)
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        if (!bullets[i]) continue;
+        let bulletRemoved = false;
+
+        for (let j = enemyBullets.length - 1; j >= 0; j--) {
+            if (!enemyBullets[j]) continue;
+
+            // Check distance between bullets
+            let d = dist(bullets[i].x, bullets[i].y, enemyBullets[j].x, enemyBullets[j].y);
+            if (d < bullets[i].size + enemyBullets[j].size) {
+                // Collision detected!
+
+                // Check if enemy bullet is destructible
+                if (enemyBullets[j].bulletType === 'sig' && enemyBullets[j].destructible) {
+                    // Sig bullet - reduce HP
+                    enemyBullets[j].hp -= bullets[i].damage;
+
+                    if (enemyBullets[j].hp <= 0) {
+                        // Sig bullet destroyed!
+                        createExplosion(enemyBullets[j].x, enemyBullets[j].y, enemyBullets[j].size);
+                        enemyBullets.splice(j, 1);
+                    }
+
+                    // Remove player bullet unless it's penetrating
+                    if (!bullets[i].penetrating && !(bullets[i] instanceof VibratingBullet)) {
+                        bullets.splice(i, 1);
+                        bulletRemoved = true;
+                    }
+                    break;
+                } else if (enemyBullets[j].bulletType === 'lead') {
+                    // Lead bullet - only weapons 1, 2, 5 can destroy
+                    // This is handled in weapon-specific code in bullet.js
+                    // Player bullets just pass through Lead bullets normally
+                }
+            }
+        }
+
+        if (bulletRemoved) break;
+    }
+
     // Enemy bullets vs player
     if (player.alive && !player.invulnerable) {
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
