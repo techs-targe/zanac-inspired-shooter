@@ -906,10 +906,18 @@ class GroundEnemy {
     }
 
     update() {
-        // Scroll down slowly - stop during boss battles
+        // Scroll down behavior:
+        // - Normal gameplay: scroll at scrollSpeed
+        // - Boss intro (phases 1-2): scroll at variable speed (set by areaManager)
+        // - Boss battle (phase 3): completely stopped
         if (!areaManager || !areaManager.bossActive) {
+            // Normal gameplay
+            this.y += this.scrollSpeed;
+        } else if (areaManager && areaManager.bossActive && areaManager.bossIntroPhase < 3) {
+            // During boss intro (phases 1-2), continue scrolling at controlled speed
             this.y += this.scrollSpeed;
         }
+        // else: Boss battle phase 3 - stopped (no movement)
 
         // Track player for aiming while scrolling
         if (player && player.alive && this.y > 0 && this.y < GAME_HEIGHT) {
@@ -1037,12 +1045,13 @@ class BossEnemy {
         this.speed = 1;
         this.phase = 0; // Attack pattern phase
         this.phaseTimer = 0;
-        this.movePattern = 0;
+        this.movePattern = areaNumber; // Use area number as unique movement pattern (1-12)
         this.isBoss = true; // Flag to identify bosses
 
         // Movement
         this.vx = 0;
         this.vy = 2;
+        this.moveTimer = 0; // Timer for movement pattern changes
 
         // Visual
         this.angle = 0;
@@ -1085,26 +1094,129 @@ class BossEnemy {
             this.shootInterval = 15;
         }
 
-        // Movement pattern
+        // Unique movement pattern per area (1-12)
+        this.moveTimer++;
         switch(this.movePattern) {
-            case 0: // Side to side
+            case 1: // Area 1: Simple side to side
                 this.x += sin(this.phaseTimer * 0.03) * 3;
                 break;
-            case 1: // Figure 8
+
+            case 2: // Area 2: Figure 8
                 this.x = GAME_WIDTH / 2 + sin(this.phaseTimer * 0.02) * 100;
                 this.y = this.targetY + sin(this.phaseTimer * 0.04) * 30;
                 break;
-            case 2: // Aggressive approach
+
+            case 3: // Area 3: Aggressive horizontal tracking
                 if (player && player.alive) {
                     let dx = player.x - this.x;
-                    this.x += dx * 0.02;
+                    this.x += dx * 0.03;
+                }
+                this.y = this.targetY + sin(this.phaseTimer * 0.02) * 15;
+                break;
+
+            case 4: // Area 4: Circular motion
+                this.x = GAME_WIDTH / 2 + cos(this.phaseTimer * 0.03) * 120;
+                this.y = this.targetY + sin(this.phaseTimer * 0.03) * 40;
+                break;
+
+            case 5: // Area 5: Vertical oscillation + horizontal sweep
+                this.y = this.targetY + sin(this.phaseTimer * 0.05) * 50;
+                this.x = GAME_WIDTH / 2 + sin(this.phaseTimer * 0.015) * 150;
+                break;
+
+            case 6: // Area 6: Diagonal sweep
+                if (this.moveTimer % 240 < 120) {
+                    // Diagonal right-down
+                    this.x += 2;
+                    this.y += 0.5;
+                } else {
+                    // Diagonal left-up
+                    this.x -= 2;
+                    this.y -= 0.5;
                 }
                 break;
-        }
 
-        // Change movement pattern periodically
-        if (this.phaseTimer % 300 === 0) {
-            this.movePattern = (this.movePattern + 1) % 3;
+            case 7: // Area 7: Expanding spiral
+                let spiralRadius = 50 + (this.phaseTimer % 180) * 0.5;
+                let spiralAngle = this.phaseTimer * 0.05;
+                this.x = GAME_WIDTH / 2 + cos(spiralAngle) * spiralRadius;
+                this.y = this.targetY + sin(spiralAngle) * (spiralRadius * 0.4);
+                break;
+
+            case 8: // Area 8: Sharp zigzag
+                if (this.moveTimer % 60 < 30) {
+                    this.x += 4;
+                } else {
+                    this.x -= 4;
+                }
+                this.y = this.targetY + sin(this.phaseTimer * 0.08) * 25;
+                break;
+
+            case 9: // Area 9: Teleport-like rapid repositioning
+                if (this.moveTimer % 120 === 0) {
+                    // Sudden jump to random position
+                    this.targetX = random(this.size + 80, GAME_WIDTH - this.size - 80);
+                    this.targetTeleportY = this.targetY + random(-40, 40);
+                }
+                if (!this.targetX) this.targetX = this.x;
+                if (!this.targetTeleportY) this.targetTeleportY = this.targetY;
+
+                // Rapid movement to target
+                this.x += (this.targetX - this.x) * 0.15;
+                this.y += (this.targetTeleportY - this.y) * 0.15;
+                break;
+
+            case 10: // Area 10: Fast horizontal dashes
+                if (this.moveTimer % 150 < 50) {
+                    // Dash right
+                    this.x += 6;
+                } else if (this.moveTimer % 150 < 100) {
+                    // Dash left
+                    this.x -= 6;
+                } else {
+                    // Pause at center
+                    this.x += (GAME_WIDTH / 2 - this.x) * 0.1;
+                }
+                this.y = this.targetY;
+                break;
+
+            case 11: // Area 11: Wave pattern (sine wave horizontally)
+                this.x += 3;
+                if (this.x > GAME_WIDTH - this.size || this.x < this.size) {
+                    this.x = constrain(this.x, this.size, GAME_WIDTH - this.size);
+                }
+                this.y = this.targetY + sin(this.x * 0.03) * 60;
+                break;
+
+            case 12: // Area 12: Final boss - complex multi-pattern
+                // Switches between patterns every 200 frames
+                let subPattern = int(this.phaseTimer / 200) % 4;
+                switch(subPattern) {
+                    case 0: // Aggressive tracking + vertical oscillation
+                        if (player && player.alive) {
+                            this.x += (player.x - this.x) * 0.05;
+                        }
+                        this.y = this.targetY + sin(this.phaseTimer * 0.08) * 45;
+                        break;
+                    case 1: // Fast circular
+                        this.x = GAME_WIDTH / 2 + cos(this.phaseTimer * 0.08) * 140;
+                        this.y = this.targetY + sin(this.phaseTimer * 0.08) * 50;
+                        break;
+                    case 2: // Rapid zigzag
+                        this.x += sin(this.phaseTimer * 0.15) * 8;
+                        this.y = this.targetY + cos(this.phaseTimer * 0.1) * 35;
+                        break;
+                    case 3: // Dive and rise
+                        let diveProgress = (this.phaseTimer % 200) / 200;
+                        this.y = this.targetY + sin(diveProgress * PI) * 80;
+                        this.x = GAME_WIDTH / 2 + sin(this.phaseTimer * 0.03) * 120;
+                        break;
+                }
+                break;
+
+            default: // Fallback to simple side to side
+                this.x += sin(this.phaseTimer * 0.03) * 3;
+                break;
         }
 
         // Keep in bounds
@@ -1290,8 +1402,11 @@ class SpecialAIAI {
     }
 
     update() {
-        // Slowly scroll down - stop during boss battles
+        // Scroll down behavior
         if (!areaManager || !areaManager.bossActive) {
+            this.y += this.scrollSpeed;
+        } else if (areaManager && areaManager.bossActive && areaManager.bossIntroPhase < 3) {
+            // During boss intro, continue scrolling
             this.y += this.scrollSpeed;
         }
 
@@ -1402,8 +1517,11 @@ class SupplyBase {
     }
 
     update() {
-        // Scroll down with area speed - stop during boss battles
+        // Scroll down behavior
         if (!areaManager || !areaManager.bossActive) {
+            this.y += this.scrollSpeed;
+        } else if (areaManager && areaManager.bossActive && areaManager.bossIntroPhase < 3) {
+            // During boss intro, continue scrolling
             this.y += this.scrollSpeed;
         }
     }

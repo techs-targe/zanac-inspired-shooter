@@ -21,6 +21,12 @@ class AreaManager {
         this.highScrollSpeed = 1.5; // High scroll speed for high-speed areas
         this.isInHighSpeed = false; // Track if currently in high-speed section
 
+        // Boss intro phase system
+        this.bossIntroPhase = 0; // 0: not started, 1: scrolling in, 2: decelerating, 3: stopped
+        this.bossIntroTimer = 0; // Timer for boss intro phases
+        this.bossIntroScrollSpeed = 0; // Current scroll speed during boss intro
+        this.bossIntroTargetY = 0; // Target Y position for ground enemies during intro
+
         // Area configurations
         this.areaConfigs = this.initAreaConfigs();
         this.currentConfig = this.areaConfigs[this.currentArea - 1];
@@ -195,7 +201,8 @@ class AreaManager {
         }
 
         if (this.bossActive) {
-            // Boss battle - no progress
+            // Boss intro and battle phase handling
+            this.updateBossIntro();
             return;
         }
 
@@ -500,216 +507,141 @@ class AreaManager {
             let boss = new BossEnemy(this.currentConfig.bossType, this.currentArea);
             enemies.push(boss);
 
+            // Initialize boss intro phase
+            this.bossIntroPhase = 1; // Start intro phase
+            this.bossIntroTimer = 0;
+            this.bossIntroScrollSpeed = 2.5; // Faster than normal for dramatic entry
+
             // Spawn initial ground enemy formations for boss battle (hardcoded)
+            // They spawn from above screen and scroll down
             this.spawnBossGroundEnemies();
         }
     }
 
-    spawnBossGroundEnemies() {
-        // Hardcoded ground enemy formations for each area boss battle
-        // Pattern: Left side and right side formations + supply bases
+    updateBossIntro() {
+        // Boss intro phase system: smoothly introduce ground enemies before battle starts
+        this.bossIntroTimer++;
 
-        const leftBaseX = 80;   // Left side base position
-        const rightBaseX = GAME_WIDTH - 80; // Right side base position
-        const ySpacing = 60;    // Vertical spacing between enemies
-        const bottomY = GAME_HEIGHT - 80; // Bottom row position
+        if (this.bossIntroPhase === 1) {
+            // Phase 1: Scroll ground enemies in at high speed (90 frames = 1.5 seconds)
+            this.scrollSpeed = this.bossIntroScrollSpeed;
 
-        // Boss battle ground enemy patterns by area
-        switch(this.currentArea) {
-            case 1: // Area 1: 3 enemies on each side (6 total) + 2 supply bases
-                // Left side: 3 turrets vertically
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'turret', 1, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'turret', 1, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'turret', 1, bottomY - ySpacing * 2));
+            // Set scroll speed for all ground enemies
+            for (let enemy of this.groundEnemies) {
+                enemy.scrollSpeed = this.bossIntroScrollSpeed;
+            }
 
-                // Right side: 3 turrets vertically
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'turret', 1, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'turret', 1, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'turret', 1, bottomY - ySpacing * 2));
+            if (this.bossIntroTimer >= 90) {
+                // Transition to deceleration phase
+                this.bossIntroPhase = 2;
+                this.bossIntroTimer = 0;
+            }
+        } else if (this.bossIntroPhase === 2) {
+            // Phase 2: Gradually decelerate (60 frames = 1 second)
+            let progress = this.bossIntroTimer / 60; // 0.0 to 1.0
+            let easedProgress = 1 - Math.pow(1 - progress, 3); // Ease-out cubic
+            this.scrollSpeed = this.bossIntroScrollSpeed * (1 - easedProgress);
 
-                // Supply bases: 1 on each side
-                this.groundEnemies.push(new SupplyBase(leftBaseX - 40, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX + 40, bottomY - ySpacing * 3, 0));
-                break;
+            // Update scroll speed for all ground enemies
+            for (let enemy of this.groundEnemies) {
+                enemy.scrollSpeed = this.scrollSpeed;
+            }
 
-            case 2: // Area 2: 4 enemies + 2 supply bases
-                // Left side: 2 cores, 2 turrets
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', 2, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'turret', 2, bottomY - ySpacing));
+            if (this.bossIntroTimer >= 60) {
+                // Transition to stopped phase
+                this.bossIntroPhase = 3;
+                this.bossIntroTimer = 0;
+                this.scrollSpeed = 0;
 
-                // Right side: 2 cores, 2 turrets
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', 2, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'turret', 2, bottomY - ySpacing));
-
-                // Supply bases
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 2, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 2, 0));
-                break;
-
-            case 3: // Area 3: 6 enemies + 3 supply bases
-                // Left side: 3 enemies (mix)
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', 3, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'turret', 3, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'core', 3, bottomY - ySpacing * 2));
-
-                // Right side: 3 enemies (mix)
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', 3, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'turret', 3, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'core', 3, bottomY - ySpacing * 2));
-
-                // Supply bases: 2 on sides + 1 in center
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 2, bottomY - ySpacing * 2, 0));
-                break;
-
-            case 4: // Area 4: 8 enemies + 2 supply bases
-                // Left side: 4 enemies
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', 4, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'core', 4, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'turret', 4, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 60, bottomY - ySpacing, 'turret', 4, bottomY - ySpacing));
-
-                // Right side: 4 enemies
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', 4, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'core', 4, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'turret', 4, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 60, bottomY - ySpacing, 'turret', 4, bottomY - ySpacing));
-
-                // Supply bases
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                break;
-
-            case 5: // Area 5: 6 enemies + 3 supply bases (high-speed area)
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', 5, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'core', 5, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'turret', 5, bottomY - ySpacing * 2));
-
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', 5, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'core', 5, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'turret', 5, bottomY - ySpacing * 2));
-
-                // Supply bases
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 2, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                break;
-
-            case 6: // Area 6: 8 enemies + 4 supply bases
-                // Left formation
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', 6, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'core', 6, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'turret', 6, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY - ySpacing, 'turret', 6, bottomY - ySpacing));
-
-                // Right formation
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', 6, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'core', 6, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'turret', 6, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY - ySpacing, 'turret', 6, bottomY - ySpacing));
-
-                // Supply bases: 4 total
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 3, bottomY - ySpacing * 2, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH * 2/3, bottomY - ySpacing * 2, 0));
-                break;
-
-            case 7: // Area 7: 8 enemies + 3 supply bases
-            case 8: // Area 8: Similar pattern
-            case 9: // Area 9: Similar pattern
-                let level = this.currentArea;
-
-                // Dense left formation
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', level, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'core', level, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'turret', level, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY - ySpacing, 'core', level, bottomY - ySpacing));
-
-                // Dense right formation
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', level, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'core', level, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'turret', level, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY - ySpacing, 'core', level, bottomY - ySpacing));
-
-                // Supply bases
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 2, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                break;
-
-            case 10: // Area 10: 10 enemies + 4 supply bases (fortress)
-            case 11: // Area 11: Similar pattern
-                level = this.currentArea;
-
-                // Heavy left formation (5 enemies)
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', level, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'core', level, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'core', level, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY - ySpacing, 'turret', level, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY - ySpacing * 2, 'turret', level, bottomY - ySpacing * 2));
-
-                // Heavy right formation (5 enemies)
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', level, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'core', level, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'core', level, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY - ySpacing, 'turret', level, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY - ySpacing * 2, 'turret', level, bottomY - ySpacing * 2));
-
-                // Supply bases: 4 total
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 3, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH * 2/3, bottomY - ySpacing * 3, 0));
-                break;
-
-            case 12: // Final area: Maximum formation (12 enemies + 5 supply bases)
-                // Heavy left formation (6 enemies)
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', 12, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'core', 12, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'core', 12, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY, 'turret', 12, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY - ySpacing, 'turret', 12, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX + 50, bottomY - ySpacing * 2, 'turret', 12, bottomY - ySpacing * 2));
-
-                // Heavy right formation (6 enemies)
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', 12, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'core', 12, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'core', 12, bottomY - ySpacing * 2));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY, 'turret', 12, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY - ySpacing, 'turret', 12, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX - 50, bottomY - ySpacing * 2, 'turret', 12, bottomY - ySpacing * 2));
-
-                // Supply bases: 5 total (maximum support)
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 4, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH / 2, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(GAME_WIDTH * 3/4, bottomY - ySpacing * 3, 0));
-                break;
-
-            default:
-                // Fallback pattern: 6 enemies + 2 supply bases
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY, 'core', this.currentArea, bottomY));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing, 'turret', this.currentArea, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(leftBaseX, bottomY - ySpacing * 2, 'turret', this.currentArea, bottomY - ySpacing * 2));
-
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY, 'core', this.currentArea, bottomY));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing, 'turret', this.currentArea, bottomY - ySpacing));
-                this.groundEnemies.push(new GroundEnemy(rightBaseX, bottomY - ySpacing * 2, 'turret', this.currentArea, bottomY - ySpacing * 2));
-
-                this.groundEnemies.push(new SupplyBase(leftBaseX, bottomY - ySpacing * 3, 0));
-                this.groundEnemies.push(new SupplyBase(rightBaseX, bottomY - ySpacing * 3, 0));
-                break;
-        }
-
-        // Set all ground enemies to not scroll (they're already at their target positions)
-        for (let enemy of this.groundEnemies) {
-            enemy.scrollSpeed = 0; // No scrolling during boss battle
+                // Set all ground enemies to zero scroll speed
+                for (let enemy of this.groundEnemies) {
+                    enemy.scrollSpeed = 0;
+                }
+            }
+        } else if (this.bossIntroPhase === 3) {
+            // Phase 3: Fully stopped - battle in progress
+            this.scrollSpeed = 0;
+            // No further updates needed, battle continues
         }
     }
 
+    spawnBossGroundEnemies() {
+        // Progressive enemy scaling by area
+        // Pattern: Ground enemies increase from 6 (Area 1) to 18 (Area 12)
+        // Supply bases increase from 2 (Area 1) to 6 (Area 12)
+
+        const leftBaseX = 80;
+        const rightBaseX = GAME_WIDTH - 80;
+        const ySpacing = 60;
+        const bottomY = GAME_HEIGHT - 80;
+        const startOffsetY = -400;
+
+        // Progressive scaling configuration
+        const enemyCount = 5 + this.currentArea; // 6 for Area 1, 18 for Area 12
+        const baseCount = Math.min(2 + Math.floor(this.currentArea / 2), 6); // 2-6 bases
+
+        // Helper to get initial Y position
+        const getInitialY = (finalY) => {
+            return startOffsetY + (finalY - (bottomY - ySpacing * 3));
+        };
+
+        // Spawn ground enemies in alternating left/right pattern
+        const enemiesPerSide = Math.ceil(enemyCount / 2);
+        
+        for (let i = 0; i < enemiesPerSide; i++) {
+            let yOffset = bottomY - i * ySpacing;
+            let xOffsetLeft = (i % 2 === 0) ? 0 : 50;
+            let xOffsetRight = (i % 2 === 0) ? 0 : -50;
+            let type = (i % 3 === 0) ? 'core' : 'turret';
+
+            // Left side enemy
+            this.groundEnemies.push(new GroundEnemy(
+                leftBaseX + xOffsetLeft,
+                getInitialY(yOffset),
+                type,
+                this.currentArea,
+                yOffset
+            ));
+
+            // Right side enemy (if total count allows)
+            if (i * 2 + 1 < enemyCount) {
+                this.groundEnemies.push(new GroundEnemy(
+                    rightBaseX + xOffsetRight,
+                    getInitialY(yOffset),
+                    type,
+                    this.currentArea,
+                    yOffset
+                ));
+            }
+        }
+
+        // Spawn supply bases evenly distributed
+        const baseSpacing = Math.max(1, Math.floor(enemiesPerSide / baseCount));
+        for (let i = 0; i < baseCount; i++) {
+            let yOffset = bottomY - (ySpacing * (enemiesPerSide + i));
+            let xPos;
+            
+            // Distribute bases: left, right, center pattern
+            if (i % 3 === 0) {
+                xPos = leftBaseX;
+            } else if (i % 3 === 1) {
+                xPos = rightBaseX;
+            } else {
+                xPos = GAME_WIDTH / 2 + (i % 2 === 0 ? -40 : 40);
+            }
+
+            this.groundEnemies.push(new SupplyBase(
+                xPos,
+                getInitialY(yOffset),
+                this.bossIntroScrollSpeed
+            ));
+        }
+
+        // Set all ground enemies' initial scroll speed
+        for (let enemy of this.groundEnemies) {
+            enemy.scrollSpeed = this.bossIntroScrollSpeed;
+        }
+    }
     onBossDefeated() {
         this.bossActive = false;
         this.bossDefeated = true;
