@@ -86,16 +86,13 @@ class InputManager {
         const rect = canvas.getBoundingClientRect();
 
         for (let touch of e.changedTouches) {
-            // CRITICAL: Scale touch coordinates to canvas coordinates
-            // rect.width/height = display size (CSS scaled)
-            // canvas.width/height = actual canvas size (GAME_WIDTH x GAME_HEIGHT)
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+            // CRITICAL FIX: Map touch coordinates to p5.js coordinate system
+            // rect = display size (CSS), width/height = p5.js canvas size
+            // Direct mapping: (clientX / rect.width) * width
+            const x = (touch.clientX - rect.left) / rect.width * width;
+            const y = (touch.clientY - rect.top) / rect.height * height;
 
-            const x = (touch.clientX - rect.left) * scaleX;
-            const y = (touch.clientY - rect.top) * scaleY;
-
-            console.log(`Touch start: (${x.toFixed(0)}, ${y.toFixed(0)}) scale:(${scaleX.toFixed(2)}, ${scaleY.toFixed(2)})`);
+            console.log(`Touch: (${x.toFixed(0)}, ${y.toFixed(0)}) display:(${rect.width.toFixed(0)}x${rect.height.toFixed(0)}) canvas:(${width}x${height})`);
 
             // Check each button in priority order (first match wins)
             // Priority: A button > B button > Pause > D-pad
@@ -145,12 +142,9 @@ class InputManager {
 
         // Update D-pad based on movement
         for (let touch of e.touches) {
-            // Scale touch coordinates to canvas coordinates
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            const x = (touch.clientX - rect.left) * scaleX;
-            const y = (touch.clientY - rect.top) * scaleY;
+            // Map touch coordinates to p5.js coordinate system
+            const x = (touch.clientX - rect.left) / rect.width * width;
+            const y = (touch.clientY - rect.top) / rect.height * height;
 
             // Check if this touch is controlling the D-pad
             if (this.activeTouches.dpad === touch.identifier) {
