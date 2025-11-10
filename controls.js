@@ -22,13 +22,18 @@ class InputManager {
 
         // Active touches for each button
         this.activeTouches = {
-            left: null,
-            right: null,
-            up: null,
-            down: null,
+            dpad: null,    // Single touch for D-pad (controls all 4 directions)
             mainFire: null,
             subFire: null,
             pause: null
+        };
+
+        // Internal touch state (preserved across frames)
+        this.touchState = {
+            left: false,
+            right: false,
+            up: false,
+            down: false
         };
 
         // Gamepad support
@@ -68,31 +73,6 @@ class InputManager {
         const canvas = document.querySelector('canvas');
         if (!canvas) return;
 
-        // Update button positions when canvas is ready
-        setTimeout(() => {
-            const rect = canvas.getBoundingClientRect();
-
-            // Position all controls at the very bottom edge (rect.height)
-            // D-pad on bottom left - center at bottom edge
-            this.touchButtons.dpad.x = this.touchButtons.dpad.size / 2 + 10;
-            this.touchButtons.dpad.y = rect.height;
-
-            // All action buttons at the very bottom (rect.height)
-            const buttonY = rect.height;
-
-            // Pause button at bottom center
-            this.touchButtons.pauseBtn.x = rect.width / 2;
-            this.touchButtons.pauseBtn.y = buttonY;
-
-            // B button (sub fire, blue) - right side, left of A
-            this.touchButtons.buttonB.x = rect.width - this.touchButtons.buttonA.size * 2 - this.touchButtons.buttonB.size - 20;
-            this.touchButtons.buttonB.y = buttonY;
-
-            // A button (main fire, red) - at right edge
-            this.touchButtons.buttonA.x = rect.width - this.touchButtons.buttonA.size - 10;
-            this.touchButtons.buttonA.y = buttonY;
-        }, 100);
-
         // Touch event handlers
         canvas.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
         canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
@@ -106,14 +86,23 @@ class InputManager {
         const rect = canvas.getBoundingClientRect();
 
         for (let touch of e.changedTouches) {
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
+            // CRITICAL: Scale touch coordinates to canvas coordinates
+            // rect.width/height = display size (CSS scaled)
+            // canvas.width/height = actual canvas size (GAME_WIDTH x GAME_HEIGHT)
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = (touch.clientX - rect.left) * scaleX;
+            const y = (touch.clientY - rect.top) * scaleY;
+
+            console.log(`Touch start: (${x.toFixed(0)}, ${y.toFixed(0)}) scale:(${scaleX.toFixed(2)}, ${scaleY.toFixed(2)})`);
 
             // Check each button in priority order (first match wins)
             // Priority: A button > B button > Pause > D-pad
 
             // Check A button (main fire)
             if (this.isInsideButton(x, y, this.touchButtons.buttonA)) {
+                console.log('  → A button pressed');
                 this.mainFire = true;
                 this.activeTouches.mainFire = touch.identifier;
                 continue; // Skip other checks for this touch
@@ -121,6 +110,7 @@ class InputManager {
 
             // Check B button (sub fire)
             if (this.isInsideButton(x, y, this.touchButtons.buttonB)) {
+                console.log('  → B button pressed');
                 this.subFire = true;
                 this.activeTouches.subFire = touch.identifier;
                 continue; // Skip other checks for this touch
@@ -128,13 +118,17 @@ class InputManager {
 
             // Check pause button (only trigger once per touch)
             if (this.isInsideButton(x, y, this.touchButtons.pauseBtn) && !this.activeTouches.pause) {
+                console.log('  → Pause button pressed');
                 this.pause = true;
                 this.activeTouches.pause = touch.identifier;
                 continue; // Skip other checks for this touch
             }
 
             // Check D-pad (lowest priority)
-            this.checkDpad(x, y, touch.identifier);
+            const dpadHit = this.checkDpad(x, y, touch.identifier);
+            if (dpadHit) {
+                console.log(`  → D-pad: ${dpadHit}`);
+            }
         }
     }
 
@@ -145,22 +139,22 @@ class InputManager {
 
         // Update D-pad based on movement
         for (let touch of e.touches) {
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
+            // Scale touch coordinates to canvas coordinates
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
 
-            // Check if this touch is on the D-pad
-            if (this.activeTouches.left === touch.identifier ||
-                this.activeTouches.right === touch.identifier ||
-                this.activeTouches.up === touch.identifier ||
-                this.activeTouches.down === touch.identifier) {
+            const x = (touch.clientX - rect.left) * scaleX;
+            const y = (touch.clientY - rect.top) * scaleY;
 
-                // Reset D-pad directions for this touch
-                if (this.activeTouches.left === touch.identifier) this.left = false;
-                if (this.activeTouches.right === touch.identifier) this.right = false;
-                if (this.activeTouches.up === touch.identifier) this.up = false;
-                if (this.activeTouches.down === touch.identifier) this.down = false;
+            // Check if this touch is controlling the D-pad
+            if (this.activeTouches.dpad === touch.identifier) {
+                // Reset internal D-pad state
+                this.touchState.left = false;
+                this.touchState.right = false;
+                this.touchState.up = false;
+                this.touchState.down = false;
 
-                // Recalculate D-pad
+                // Recalculate D-pad based on new position (updates touchState)
                 this.checkDpad(x, y, touch.identifier);
             }
         }
@@ -172,22 +166,17 @@ class InputManager {
         for (let touch of e.changedTouches) {
             const id = touch.identifier;
 
-            // Release D-pad directions
-            if (this.activeTouches.left === id) {
+            // Release D-pad (all directions)
+            if (this.activeTouches.dpad === id) {
                 this.left = false;
-                this.activeTouches.left = null;
-            }
-            if (this.activeTouches.right === id) {
                 this.right = false;
-                this.activeTouches.right = null;
-            }
-            if (this.activeTouches.up === id) {
                 this.up = false;
-                this.activeTouches.up = null;
-            }
-            if (this.activeTouches.down === id) {
                 this.down = false;
-                this.activeTouches.down = null;
+                this.touchState.left = false;
+                this.touchState.right = false;
+                this.touchState.up = false;
+                this.touchState.down = false;
+                this.activeTouches.dpad = null;
             }
 
             // Release fire buttons
@@ -215,30 +204,40 @@ class InputManager {
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < dpad.size / 2) {
-            // Inside D-pad
-            const angle = Math.atan2(dy, dx);
-            const angleDeg = angle * 180 / Math.PI;
+            // Inside D-pad - allow diagonal movement!
+            // Mark this touch as controlling the D-pad
+            this.activeTouches.dpad = touchId;
 
-            // Determine direction based on angle
-            // Right: -45 to 45
-            // Down: 45 to 135
-            // Left: 135 to -135
-            // Up: -135 to -45
+            // Use threshold-based detection instead of angle
+            const threshold = dpad.size / 6; // Adjust sensitivity
 
-            if (angleDeg >= -45 && angleDeg < 45) {
-                this.right = true;
-                this.activeTouches.right = touchId;
-            } else if (angleDeg >= 45 && angleDeg < 135) {
-                this.down = true;
-                this.activeTouches.down = touchId;
-            } else if (angleDeg >= 135 || angleDeg < -135) {
+            let directions = [];
+
+            // Horizontal direction (update internal touch state)
+            if (dx < -threshold) {
+                this.touchState.left = true;
                 this.left = true;
-                this.activeTouches.left = touchId;
-            } else {
-                this.up = true;
-                this.activeTouches.up = touchId;
+                directions.push('LEFT');
+            } else if (dx > threshold) {
+                this.touchState.right = true;
+                this.right = true;
+                directions.push('RIGHT');
             }
+
+            // Vertical direction (update internal touch state)
+            if (dy < -threshold) {
+                this.touchState.up = true;
+                this.up = true;
+                directions.push('UP');
+            } else if (dy > threshold) {
+                this.touchState.down = true;
+                this.down = true;
+                directions.push('DOWN');
+            }
+
+            return directions.length > 0 ? directions.join('+') : null;
         }
+        return null;
     }
 
     isInsideButton(x, y, button) {
@@ -303,14 +302,25 @@ class InputManager {
         // Pause is always reset (one-time trigger)
         this.pause = false;
 
-        // For other inputs: reset if not actively touched
-        // (keyboard and gamepad states will be re-evaluated in update())
-        if (!this.activeTouches.left) this.left = false;
-        if (!this.activeTouches.right) this.right = false;
-        if (!this.activeTouches.up) this.up = false;
-        if (!this.activeTouches.down) this.down = false;
-        if (!this.activeTouches.mainFire) this.mainFire = false;
-        if (!this.activeTouches.subFire) this.subFire = false;
+        // Reset all inputs
+        this.left = false;
+        this.right = false;
+        this.up = false;
+        this.down = false;
+        this.mainFire = false;
+        this.subFire = false;
+
+        // Restore D-pad state from internal touch state
+        if (this.activeTouches.dpad !== null) {
+            this.left = this.touchState.left;
+            this.right = this.touchState.right;
+            this.up = this.touchState.up;
+            this.down = this.touchState.down;
+        }
+
+        // Restore fire button states
+        if (this.activeTouches.mainFire !== null) this.mainFire = true;
+        if (this.activeTouches.subFire !== null) this.subFire = true;
     }
 
     isGamepadLeft() {
@@ -393,10 +403,52 @@ class InputManager {
         pop();
     }
 
+    updateButtonPositions() {
+        // Update button positions based on current canvas size
+        // Called every frame to ensure positions match display
+
+        // D-pad on bottom left - center at bottom edge
+        this.touchButtons.dpad.x = this.touchButtons.dpad.size / 2 + 10;
+        this.touchButtons.dpad.y = height; // Use p5.js height
+
+        // All action buttons at the very bottom
+        const buttonY = height;
+
+        // Pause button at bottom center + shift right by 10
+        this.touchButtons.pauseBtn.x = width / 2 + 10;
+        this.touchButtons.pauseBtn.y = buttonY;
+
+        // A button (main fire, red) - at right edge + shift right by 20
+        this.touchButtons.buttonA.x = width - this.touchButtons.buttonA.size - 10 + 20;
+        this.touchButtons.buttonA.y = buttonY;
+
+        // B button (sub fire, blue) - right side, left of A + shift right by 20
+        this.touchButtons.buttonB.x = width - this.touchButtons.buttonA.size * 2 - this.touchButtons.buttonB.size - 20 + 20;
+        this.touchButtons.buttonB.y = buttonY;
+    }
+
     drawTouchControls() {
         if (!this.isMobile) return;
 
+        // Update positions first to match current canvas size
+        this.updateButtonPositions();
+
         push();
+
+        // DEBUG: Show touch state (top-left corner)
+        fill(255, 100, 100);
+        textSize(10);
+        textAlign(LEFT, TOP);
+        text(`Touch Debug:`, 10, 120);
+        text(`L:${this.left} R:${this.right} U:${this.up} D:${this.down}`, 10, 132);
+        text(`A:${this.mainFire} B:${this.subFire} P:${this.pause}`, 10, 144);
+        text(`Active: ${Object.values(this.activeTouches).filter(t => t !== null).length}`, 10, 156);
+
+        // Show button positions
+        fill(255, 255, 100);
+        text(`Dpad:(${this.touchButtons.dpad.x.toFixed(0)},${this.touchButtons.dpad.y.toFixed(0)})`, 10, 168);
+        text(`A:(${this.touchButtons.buttonA.x.toFixed(0)},${this.touchButtons.buttonA.y.toFixed(0)})`, 10, 180);
+        text(`B:(${this.touchButtons.buttonB.x.toFixed(0)},${this.touchButtons.buttonB.y.toFixed(0)})`, 10, 192);
 
         // D-pad
         const dpad = this.touchButtons.dpad;
