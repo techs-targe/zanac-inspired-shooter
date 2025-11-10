@@ -253,34 +253,90 @@ class InputManager {
     }
 
     updateGamepad() {
-        if (this.gamepadIndex < 0) return;
+        if (this.gamepadIndex < 0) {
+            console.log('🎮 DEBUG: gamepadIndex is -1');
+            return;
+        }
 
-        const gamepad = navigator.getGamepads()[this.gamepadIndex];
-        if (!gamepad) return;
+        const gamepads = navigator.getGamepads();
+        console.log('🎮 DEBUG: getGamepads() =>', gamepads);
+        console.log('🎮 DEBUG: gamepadIndex =>', this.gamepadIndex);
+
+        const gamepad = gamepads[this.gamepadIndex];
+        console.log('🎮 DEBUG: gamepad object =>', gamepad);
+
+        if (!gamepad) {
+            console.log('🎮 DEBUG: gamepad is null/undefined');
+            return;
+        }
+
+        console.log('🎮 DEBUG: axes =>', gamepad.axes);
+        console.log('🎮 DEBUG: buttons =>', gamepad.buttons.map((b, i) => b.pressed ? i : null).filter(x => x !== null));
 
         // Axes (left stick)
         const axisX = gamepad.axes[0];
         const axisY = gamepad.axes[1];
 
-        if (axisX < -this.gamepadDeadzone) this.left = true;
-        if (axisX > this.gamepadDeadzone) this.right = true;
-        if (axisY < -this.gamepadDeadzone) this.up = true;
-        if (axisY > this.gamepadDeadzone) this.down = true;
+        console.log('🎮 DEBUG: axisX =>', axisX, 'axisY =>', axisY, 'deadzone =>', this.gamepadDeadzone);
+
+        if (axisX < -this.gamepadDeadzone) {
+            console.log('🎮 LEFT detected');
+            this.left = true;
+        }
+        if (axisX > this.gamepadDeadzone) {
+            console.log('🎮 RIGHT detected');
+            this.right = true;
+        }
+        if (axisY < -this.gamepadDeadzone) {
+            console.log('🎮 UP detected');
+            this.up = true;
+        }
+        if (axisY > this.gamepadDeadzone) {
+            console.log('🎮 DOWN detected');
+            this.down = true;
+        }
 
         // D-pad (buttons 12-15)
-        if (gamepad.buttons[14] && gamepad.buttons[14].pressed) this.left = true;
-        if (gamepad.buttons[15] && gamepad.buttons[15].pressed) this.right = true;
-        if (gamepad.buttons[12] && gamepad.buttons[12].pressed) this.up = true;
-        if (gamepad.buttons[13] && gamepad.buttons[13].pressed) this.down = true;
+        if (gamepad.buttons[14] && gamepad.buttons[14].pressed) {
+            console.log('🎮 D-pad LEFT (button 14)');
+            this.left = true;
+        }
+        if (gamepad.buttons[15] && gamepad.buttons[15].pressed) {
+            console.log('🎮 D-pad RIGHT (button 15)');
+            this.right = true;
+        }
+        if (gamepad.buttons[12] && gamepad.buttons[12].pressed) {
+            console.log('🎮 D-pad UP (button 12)');
+            this.up = true;
+        }
+        if (gamepad.buttons[13] && gamepad.buttons[13].pressed) {
+            console.log('🎮 D-pad DOWN (button 13)');
+            this.down = true;
+        }
 
         // Fire buttons (A = 0, B = 1, X = 2, Y = 3)
-        if (gamepad.buttons[0] && gamepad.buttons[0].pressed) this.mainFire = true; // A button
-        if (gamepad.buttons[1] && gamepad.buttons[1].pressed) this.subFire = true;  // B button
-        if (gamepad.buttons[2] && gamepad.buttons[2].pressed) this.mainFire = true; // X button
-        if (gamepad.buttons[3] && gamepad.buttons[3].pressed) this.subFire = true;  // Y button
+        if (gamepad.buttons[0] && gamepad.buttons[0].pressed) {
+            console.log('🎮 A button (0)');
+            this.mainFire = true;
+        }
+        if (gamepad.buttons[1] && gamepad.buttons[1].pressed) {
+            console.log('🎮 B button (1)');
+            this.subFire = true;
+        }
+        if (gamepad.buttons[2] && gamepad.buttons[2].pressed) {
+            console.log('🎮 X button (2)');
+            this.mainFire = true;
+        }
+        if (gamepad.buttons[3] && gamepad.buttons[3].pressed) {
+            console.log('🎮 Y button (3)');
+            this.subFire = true;
+        }
 
         // Start button for pause (button 9)
-        if (gamepad.buttons[9] && gamepad.buttons[9].pressed) this.pause = true;
+        if (gamepad.buttons[9] && gamepad.buttons[9].pressed) {
+            console.log('🎮 START button (9)');
+            this.pause = true;
+        }
     }
 
     resetFrame() {
