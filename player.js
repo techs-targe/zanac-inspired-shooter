@@ -167,10 +167,12 @@ class Player {
         // Mark that main weapon was used (for Crow bonus)
         this.hasUsedMainWeapon = true;
 
-        // Level 30: Thin laser with increased power
+        // Level 30: Ultra-thin laser beam with high power
         if (this.mainWeaponLevel === 30) {
-            // Thin laser beam
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -12, 4, 5));
+            // Create a special thin laser bullet
+            let laserBullet = new PenetratingBullet(this.x, this.y - this.size, 0, -15, 2, 8);
+            laserBullet.isLaserBeam = true; // Special flag for laser rendering
+            bullets.push(laserBullet);
             return;
         }
 

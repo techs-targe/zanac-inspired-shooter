@@ -188,6 +188,36 @@ class PenetratingBullet extends Bullet {
         push();
         noStroke();
 
+        // Special rendering for LV30 laser beam
+        if (this.isLaserBeam) {
+            // Ultra-thin laser beam - vertical line
+            let laserLength = 40; // Long laser trail
+
+            // Outer glow
+            stroke(100, 255, 255, 100);
+            strokeWeight(this.size * 3);
+            line(this.x, this.y, this.x, this.y + laserLength);
+
+            // Middle glow
+            stroke(150, 255, 255, 180);
+            strokeWeight(this.size * 1.5);
+            line(this.x, this.y, this.x, this.y + laserLength);
+
+            // Core beam - bright white
+            stroke(255, 255, 255);
+            strokeWeight(this.size);
+            line(this.x, this.y, this.x, this.y + laserLength);
+
+            // Bright point at the tip
+            noStroke();
+            fill(255, 255, 255);
+            ellipse(this.x, this.y, this.size * 2, this.size * 2);
+
+            pop();
+            return;
+        }
+
+        // Normal penetrating bullet rendering
         // Bright green/cyan penetrating beam
         fill(100, 255, 200);
         ellipse(this.x, this.y, this.size, this.size * 1.5);
