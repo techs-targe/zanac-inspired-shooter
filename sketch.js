@@ -120,11 +120,6 @@ function draw() {
     if (inputManager && inputManager.isMobile) {
         inputManager.drawTouchControls();
     }
-
-    // Draw gamepad debug info (ALWAYS show for debugging)
-    if (inputManager) {
-        inputManager.drawDebugInfo();
-    }
 }
 
 function initGame() {

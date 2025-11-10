@@ -41,7 +41,6 @@ class InputManager {
         // Gamepad support
         this.gamepadIndex = -1;
         this.gamepadDeadzone = 0.2;
-        this.gamepadDebug = null; // Debug info for on-screen display
 
         // Mobile detection
         this.isMobile = this.detectMobile();
@@ -254,100 +253,36 @@ class InputManager {
     }
 
     updateGamepad() {
-        // Store debug info for on-screen display
-        this.gamepadDebug = {
-            called: true,
-            index: this.gamepadIndex,
-            gamepadNull: false,
-            axes: null,
-            pressedButtons: [],
-            detectedInputs: []
-        };
-
-        if (this.gamepadIndex < 0) {
-            this.gamepadDebug.index = -1;
-            return;
-        }
+        if (this.gamepadIndex < 0) return;
 
         const gamepads = navigator.getGamepads();
         const gamepad = gamepads[this.gamepadIndex];
 
-        if (!gamepad) {
-            this.gamepadDebug.gamepadNull = true;
-            return;
-        }
-
-        // Store raw values for display
-        this.gamepadDebug.axes = [gamepad.axes[0], gamepad.axes[1]];
-        this.gamepadDebug.pressedButtons = [];
-        for (let i = 0; i < gamepad.buttons.length; i++) {
-            if (gamepad.buttons[i].pressed) {
-                this.gamepadDebug.pressedButtons.push(i);
-            }
-        }
+        if (!gamepad) return;
 
         // Axes (left stick)
         const axisX = gamepad.axes[0];
         const axisY = gamepad.axes[1];
 
-        if (axisX < -this.gamepadDeadzone) {
-            this.left = true;
-            this.gamepadDebug.detectedInputs.push('L');
-        }
-        if (axisX > this.gamepadDeadzone) {
-            this.right = true;
-            this.gamepadDebug.detectedInputs.push('R');
-        }
-        if (axisY < -this.gamepadDeadzone) {
-            this.up = true;
-            this.gamepadDebug.detectedInputs.push('U');
-        }
-        if (axisY > this.gamepadDeadzone) {
-            this.down = true;
-            this.gamepadDebug.detectedInputs.push('D');
-        }
+        if (axisX < -this.gamepadDeadzone) this.left = true;
+        if (axisX > this.gamepadDeadzone) this.right = true;
+        if (axisY < -this.gamepadDeadzone) this.up = true;
+        if (axisY > this.gamepadDeadzone) this.down = true;
 
         // D-pad (buttons 12-15)
-        if (gamepad.buttons[14] && gamepad.buttons[14].pressed) {
-            this.left = true;
-            this.gamepadDebug.detectedInputs.push('L(btn14)');
-        }
-        if (gamepad.buttons[15] && gamepad.buttons[15].pressed) {
-            this.right = true;
-            this.gamepadDebug.detectedInputs.push('R(btn15)');
-        }
-        if (gamepad.buttons[12] && gamepad.buttons[12].pressed) {
-            this.up = true;
-            this.gamepadDebug.detectedInputs.push('U(btn12)');
-        }
-        if (gamepad.buttons[13] && gamepad.buttons[13].pressed) {
-            this.down = true;
-            this.gamepadDebug.detectedInputs.push('D(btn13)');
-        }
+        if (gamepad.buttons[14] && gamepad.buttons[14].pressed) this.left = true;
+        if (gamepad.buttons[15] && gamepad.buttons[15].pressed) this.right = true;
+        if (gamepad.buttons[12] && gamepad.buttons[12].pressed) this.up = true;
+        if (gamepad.buttons[13] && gamepad.buttons[13].pressed) this.down = true;
 
         // Fire buttons (A = 0, B = 1, X = 2, Y = 3)
-        if (gamepad.buttons[0] && gamepad.buttons[0].pressed) {
-            this.mainFire = true;
-            this.gamepadDebug.detectedInputs.push('A(btn0)');
-        }
-        if (gamepad.buttons[1] && gamepad.buttons[1].pressed) {
-            this.subFire = true;
-            this.gamepadDebug.detectedInputs.push('B(btn1)');
-        }
-        if (gamepad.buttons[2] && gamepad.buttons[2].pressed) {
-            this.mainFire = true;
-            this.gamepadDebug.detectedInputs.push('X(btn2)');
-        }
-        if (gamepad.buttons[3] && gamepad.buttons[3].pressed) {
-            this.subFire = true;
-            this.gamepadDebug.detectedInputs.push('Y(btn3)');
-        }
+        if (gamepad.buttons[0] && gamepad.buttons[0].pressed) this.mainFire = true; // A button
+        if (gamepad.buttons[1] && gamepad.buttons[1].pressed) this.subFire = true;  // B button
+        if (gamepad.buttons[2] && gamepad.buttons[2].pressed) this.mainFire = true; // X button
+        if (gamepad.buttons[3] && gamepad.buttons[3].pressed) this.subFire = true;  // Y button
 
         // Start button for pause (button 9)
-        if (gamepad.buttons[9] && gamepad.buttons[9].pressed) {
-            this.pause = true;
-            this.gamepadDebug.detectedInputs.push('START(btn9)');
-        }
+        if (gamepad.buttons[9] && gamepad.buttons[9].pressed) this.pause = true;
     }
 
     resetFrame() {
@@ -421,76 +356,6 @@ class InputManager {
         if (!gamepad) return false;
         return (gamepad.buttons[1] && gamepad.buttons[1].pressed) ||
                (gamepad.buttons[3] && gamepad.buttons[3].pressed);
-    }
-
-    drawDebugInfo() {
-        // Draw comprehensive gamepad debug info (LEFT SIDE, LARGE BOX)
-        push();
-        fill(0, 0, 0, 200); // Darker background
-        noStroke();
-        rect(0, 100, 300, 250); // Bigger box
-
-        fill(255, 255, 0);
-        textSize(14);
-        textAlign(LEFT, TOP);
-        let y = 105;
-
-        text('GAMEPAD DEBUG', 5, y); y += 18;
-
-        // ALWAYS show these, no early returns
-        fill(255, 255, 255);
-        textSize(11);
-
-        // 1. Check if updateGamepad was called
-        text(`updateGamepad: ${this.gamepadDebug ? 'YES' : 'NO'}`, 5, y); y += 14;
-
-        // 2. Show gamepad index (raw value)
-        text(`gamepadIndex: ${this.gamepadIndex}`, 5, y); y += 14;
-
-        // 3. Get fresh gamepad object RIGHT NOW
-        const gamepads = navigator.getGamepads();
-        const gp = gamepads ? gamepads[this.gamepadIndex] : null;
-
-        text(`getGamepads(): ${gamepads ? 'OK' : 'NULL'}`, 5, y); y += 14;
-        text(`gamepad[${this.gamepadIndex}]: ${gp ? 'OK' : 'NULL'}`, 5, y); y += 14;
-
-        if (gp) {
-            text(`connected: ${gp.connected}`, 5, y); y += 14;
-            text(`id: ${gp.id.substring(0, 25)}`, 5, y); y += 14;
-
-            fill(100, 255, 100);
-            text(`axes[0]: ${gp.axes[0].toFixed(3)}`, 5, y); y += 14;
-            text(`axes[1]: ${gp.axes[1].toFixed(3)}`, 5, y); y += 14;
-
-            fill(100, 200, 255);
-            let pressed = [];
-            for (let i = 0; i < gp.buttons.length; i++) {
-                if (gp.buttons[i].pressed) pressed.push(i);
-            }
-            text(`buttons: [${pressed.join(',')}]`, 5, y); y += 14;
-        }
-
-        // Show what updateGamepad detected
-        if (this.gamepadDebug && this.gamepadDebug.detectedInputs) {
-            fill(255, 100, 255);
-            text(`detected: ${this.gamepadDebug.detectedInputs.join(',')}`, 5, y); y += 14;
-        }
-
-        // Show final input state
-        fill(255, 255, 100);
-        let final = [];
-        if (this.left) final.push('L');
-        if (this.right) final.push('R');
-        if (this.up) final.push('U');
-        if (this.down) final.push('D');
-        if (this.mainFire) final.push('A');
-        if (this.subFire) final.push('B');
-        text(`FINAL: ${final.join(',')}`, 5, y); y += 14;
-
-        fill(150, 150, 150);
-        text(`deadzone: ${this.gamepadDeadzone}`, 5, y); y += 14;
-
-        pop();
     }
 
     updateButtonPositions() {
