@@ -8,6 +8,7 @@ class Enemy {
         this.scoreValue = 10;
         this.canShoot = false;
         this.shootInterval = 60;
+        this.shootTimer = 0; // Individual shoot timer for each enemy
         this.speed = 2;
         this.angle = 0;
         this.timeAlive = 0;
@@ -463,6 +464,15 @@ class Enemy {
                 }
                 break;
         }
+
+        // Update shoot timer and shoot when ready (for all enemies with canShoot)
+        if (this.canShoot && this.y > 0 && this.y < GAME_HEIGHT) {
+            this.shootTimer++;
+            if (this.shootTimer >= this.shootInterval) {
+                this.shoot();
+                this.shootTimer = 0; // Reset timer
+            }
+        }
     }
 
     shoot() {
@@ -896,8 +906,10 @@ class GroundEnemy {
     }
 
     update() {
-        // Always scroll down slowly - never stop
-        this.y += this.scrollSpeed;
+        // Scroll down slowly - stop during boss battles
+        if (!areaManager || !areaManager.bossActive) {
+            this.y += this.scrollSpeed;
+        }
 
         // Track player for aiming while scrolling
         if (player && player.alive && this.y > 0 && this.y < GAME_HEIGHT) {
@@ -1269,7 +1281,7 @@ class SpecialAIAI {
         this.isGround = true;
         this.isSpecial = true; // Flag to identify as AI-AI
         this.canShoot = false;
-        this.scrollSpeed = 0.3; // Very slow movement
+        this.scrollSpeed = 0.15; // Very slow movement (reduced to 1/2)
         this.angle = 0; // For animation
 
         // Color scheme - make it look special
@@ -1278,8 +1290,10 @@ class SpecialAIAI {
     }
 
     update() {
-        // Slowly scroll down
-        this.y += this.scrollSpeed;
+        // Slowly scroll down - stop during boss battles
+        if (!areaManager || !areaManager.bossActive) {
+            this.y += this.scrollSpeed;
+        }
 
         // Rotate for visual effect
         this.angle += 0.02;
@@ -1388,8 +1402,10 @@ class SupplyBase {
     }
 
     update() {
-        // Scroll down with area speed
-        this.y += this.scrollSpeed;
+        // Scroll down with area speed - stop during boss battles
+        if (!areaManager || !areaManager.bossActive) {
+            this.y += this.scrollSpeed;
+        }
     }
 
     shoot() {

@@ -98,7 +98,7 @@ class Bullet {
 
                 // HP indicator removed - not needed for gameplay clarity
             } else if (this.bulletType === 'lead') {
-                // リード（しだれ弾）- 青紫色、涙型/水滴型、基本破壊不能
+                // リード（しだれ弾）- 白い光、涙型/水滴型、基本破壊不能、目立つように
                 push();
                 translate(this.x, this.y);
 
@@ -106,12 +106,12 @@ class Bullet {
                 let angle = atan2(this.vy, this.vx);
                 rotate(angle);
 
-                // Outer glow
-                fill(150, 100, 255, 60);
-                ellipse(0, 0, this.size * 2, this.size * 2.5);
+                // Outer glow - bright white
+                fill(255, 255, 255, 80);
+                ellipse(0, 0, this.size * 2.5, this.size * 3);
 
-                // Main body - teardrop shape (水滴型)
-                fill(120, 80, 220);
+                // Main body - teardrop shape (水滴型) - bright white
+                fill(255, 255, 255);
                 beginShape();
                 // Rounded top
                 for (let a = PI; a <= TWO_PI; a += 0.2) {
@@ -122,19 +122,19 @@ class Bullet {
                 vertex(0, this.size * 0.8);
                 endShape(CLOSE);
 
-                // Highlight on teardrop
-                fill(200, 150, 255, 200);
-                ellipse(-this.size * 0.15, -this.size * 0.3, this.size * 0.5, this.size * 0.5);
+                // Highlight on teardrop - very bright
+                fill(255, 255, 255, 230);
+                ellipse(-this.size * 0.15, -this.size * 0.3, this.size * 0.6, this.size * 0.6);
 
-                // Small core
-                fill(255, 200, 255, 180);
-                ellipse(0, 0, this.size * 0.3, this.size * 0.3);
+                // Bright core
+                fill(255, 255, 255, 255);
+                ellipse(0, 0, this.size * 0.4, this.size * 0.4);
 
                 pop();
 
-                // Trailing glow effect (not rotated)
-                fill(150, 100, 255, 40);
-                ellipse(this.x, this.y, this.size * 1.8, this.size * 1.8);
+                // Trailing glow effect (not rotated) - bright white glow
+                fill(255, 255, 255, 60);
+                ellipse(this.x, this.y, this.size * 2, this.size * 2);
             } else {
                 // Normal enemy bullet - red/orange energy
                 fill(255, 100, 100);

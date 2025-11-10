@@ -147,20 +147,23 @@ class EnemyManager {
             if (rand < 0.97) return 'blueGogos';
             return 'tank';
         } else if (diff < 3.5) {
-            // Late game - tougher enemies + Gogos
-            if (rand < 0.1) return 'basic';
-            if (rand < 0.2) return 'shooter';
-            if (rand < 0.3) return 'weaver';
-            if (rand < 0.4) return 'fast';
-            if (rand < 0.5) return 'spiral';
-            if (rand < 0.58) return 'charger';
-            if (rand < 0.66) return 'tank';
-            if (rand < 0.73) return 'bouncer';
-            if (rand < 0.79) return 'drobe';
-            if (rand < 0.84) return 'yellowGogos';
-            if (rand < 0.89) return 'blueGogos';
-            if (rand < 0.94) return 'backDegeed';
-            return 'bomber';
+            // Late game - tougher enemies + all Gogos variants + special enemies
+            if (rand < 0.08) return 'basic';
+            if (rand < 0.16) return 'shooter';
+            if (rand < 0.24) return 'weaver';
+            if (rand < 0.32) return 'fast';
+            if (rand < 0.4) return 'spiral';
+            if (rand < 0.48) return 'charger';
+            if (rand < 0.56) return 'tank';
+            if (rand < 0.63) return 'bomber';
+            if (rand < 0.69) return 'bouncer';
+            if (rand < 0.75) return 'drobe';
+            if (rand < 0.8) return 'yellowGogos';
+            if (rand < 0.85) return 'blueGogos';
+            if (rand < 0.89) return 'redGogos'; // Added redGogos
+            if (rand < 0.93) return 'takuwashi'; // Added takuwashi
+            if (rand < 0.97) return 'backDegeed';
+            return 'degeed';
         } else if (diff < 4.5) {
             // Expert mode - very tough + dangerous enemies
             if (rand < 0.08) return 'shooter';

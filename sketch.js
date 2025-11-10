@@ -151,8 +151,10 @@ function initGame() {
 function updateGame() {
     try {
         gameTime++;
-        // Scroll speed based on current area
-        scrollOffset += areaManager.scrollSpeed;
+        // Scroll speed based on current area (stop scrolling during boss battles)
+        if (!areaManager.bossActive) {
+            scrollOffset += areaManager.scrollSpeed;
+        }
 
         // Update player (if alive or game still running)
         if (player) {
@@ -301,10 +303,7 @@ function updateGame() {
                     continue;
                 }
 
-                // Enemy shooting
-                if (enemies[i].canShoot && frameCount % enemies[i].shootInterval === 0) {
-                    enemies[i].shoot();
-                }
+                // Enemy shooting is now handled in each enemy's update() method
             }
         }
 
