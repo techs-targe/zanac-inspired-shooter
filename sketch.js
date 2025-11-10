@@ -121,8 +121,8 @@ function draw() {
         inputManager.drawTouchControls();
     }
 
-    // Draw gamepad debug info (always show when gamepad is connected)
-    if (inputManager && inputManager.gamepadIndex >= 0) {
+    // Draw gamepad debug info (ALWAYS show for debugging)
+    if (inputManager) {
         inputManager.drawDebugInfo();
     }
 }
