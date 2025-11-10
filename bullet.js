@@ -1,5 +1,5 @@
 class Bullet {
-    constructor(x, y, vx, vy, isPlayerBullet = true, damage = 1, size = 4) {
+    constructor(x, y, vx, vy, isPlayerBullet = true, damage = 1, size = 4, bulletType = 'normal') {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -7,6 +7,25 @@ class Bullet {
         this.size = size;
         this.isPlayerBullet = isPlayerBullet;
         this.damage = damage;
+        this.bulletType = bulletType; // 'normal', 'sig', 'lead'
+
+        // Bullet HP system for enemy bullets
+        if (!isPlayerBullet) {
+            if (bulletType === 'sig') {
+                this.hp = 2; // シグ：耐久力2
+                this.maxHp = 2;
+                this.destructible = true; // 破壊可能
+            } else if (bulletType === 'lead') {
+                this.hp = 999; // リード：基本破壊不能
+                this.maxHp = 999;
+                this.destructible = false; // 武器1,2,5のみ破壊可能
+            } else {
+                this.hp = 1;
+                this.maxHp = 1;
+                this.destructible = true;
+            }
+        }
+
         this.color = isPlayerBullet ? color(100, 255, 255) : color(255, 100, 100);
     }
 
@@ -31,16 +50,49 @@ class Bullet {
             fill(100, 255, 255, 50);
             ellipse(this.x, this.y, this.size * 2, this.size * 3);
         } else {
-            // Enemy bullet - red/orange energy
-            fill(255, 100, 100);
-            ellipse(this.x, this.y, this.size, this.size);
+            // Enemy bullets - different appearance based on type
+            if (this.bulletType === 'sig') {
+                // シグ（ミサイル）- オレンジ色、破壊可能
+                fill(255, 150, 50);
+                ellipse(this.x, this.y, this.size * 1.2, this.size * 1.2);
 
-            fill(255, 200, 100, 150);
-            ellipse(this.x, this.y, this.size * 0.6, this.size * 0.6);
+                fill(255, 200, 100, 200);
+                ellipse(this.x, this.y, this.size * 0.7, this.size * 0.7);
 
-            // Glow effect
-            fill(255, 100, 100, 80);
-            ellipse(this.x, this.y, this.size * 1.8, this.size * 1.8);
+                // Glow
+                fill(255, 150, 50, 100);
+                ellipse(this.x, this.y, this.size * 2, this.size * 2);
+
+                // HP indicator (if damaged)
+                if (this.hp < this.maxHp) {
+                    fill(255, 255, 0);
+                    textSize(8);
+                    textAlign(CENTER);
+                    text(this.hp, this.x, this.y - this.size - 3);
+                }
+            } else if (this.bulletType === 'lead') {
+                // リード（しだれ弾）- 青紫色、基本破壊不能
+                fill(150, 100, 255);
+                ellipse(this.x, this.y, this.size, this.size);
+
+                fill(200, 150, 255, 180);
+                ellipse(this.x, this.y, this.size * 0.6, this.size * 0.6);
+
+                // Glow
+                fill(150, 100, 255, 80);
+                ellipse(this.x, this.y, this.size * 1.6, this.size * 1.6);
+            } else {
+                // Normal enemy bullet - red/orange energy
+                fill(255, 100, 100);
+                ellipse(this.x, this.y, this.size, this.size);
+
+                fill(255, 200, 100, 150);
+                ellipse(this.x, this.y, this.size * 0.6, this.size * 0.6);
+
+                // Glow effect
+                fill(255, 100, 100, 80);
+                ellipse(this.x, this.y, this.size * 1.8, this.size * 1.8);
+            }
         }
 
         pop();
@@ -78,12 +130,22 @@ class PenetratingBullet extends Bullet {
     update() {
         super.update();
 
-        // Weapon 1 destroys enemy bullets on contact
+        // Weapon 1 destroys enemy bullets on contact (INCLUDING LEAD bullets)
         if (this.isPlayerBullet && this.damage >= 2) { // Only weapon 1, not weapon 7
             for (let i = enemyBullets.length - 1; i >= 0; i--) {
                 let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
                 if (d < this.size + enemyBullets[i].size) {
-                    enemyBullets.splice(i, 1);
+                    let bullet = enemyBullets[i];
+                    // Weapon 1 can destroy even LEAD bullets
+                    if (bullet.bulletType === 'sig' || bullet.bulletType === 'lead' || bullet.destructible) {
+                        bullet.hp -= this.damage;
+                        if (bullet.hp <= 0) {
+                            enemyBullets.splice(i, 1);
+                        }
+                    } else {
+                        // Destroy normal bullets instantly
+                        enemyBullets.splice(i, 1);
+                    }
                 }
             }
         }
@@ -151,11 +213,23 @@ class VibratingBullet extends Bullet {
         }
 
         // Check collision with enemy bullets (blocks bullets from air enemies)
+        // Weapon 4 CANNOT destroy LEAD bullets
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
             if (d < this.size) {
-                enemyBullets.splice(i, 1);
-                // Bullet blocked, no durability loss
+                let bullet = enemyBullets[i];
+                // Can only destroy normal bullets and SIG, NOT LEAD
+                if (bullet.bulletType !== 'lead') {
+                    if (bullet.bulletType === 'sig') {
+                        bullet.hp -= 2;
+                        if (bullet.hp <= 0) {
+                            enemyBullets.splice(i, 1);
+                        }
+                    } else {
+                        enemyBullets.splice(i, 1);
+                    }
+                    // Bullet blocked, no durability loss
+                }
             }
         }
 
@@ -301,11 +375,21 @@ class BoomerangBullet extends Bullet {
             }
         }
 
-        // Weapon 5 destroys enemy bullets on contact
+        // Weapon 5 destroys enemy bullets on contact (INCLUDING LEAD bullets)
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
             if (d < this.size + enemyBullets[i].size) {
-                enemyBullets.splice(i, 1);
+                let bullet = enemyBullets[i];
+                // Weapon 5 can destroy even LEAD bullets
+                if (bullet.bulletType === 'sig' || bullet.bulletType === 'lead' || bullet.destructible) {
+                    bullet.hp -= this.damage;
+                    if (bullet.hp <= 0) {
+                        enemyBullets.splice(i, 1);
+                    }
+                } else {
+                    // Destroy normal bullets instantly
+                    enemyBullets.splice(i, 1);
+                }
             }
         }
     }
@@ -375,11 +459,21 @@ class StraightLaserBullet extends Bullet {
     update() {
         super.update();
 
-        // Weapon 5 laser destroys enemy bullets on contact
+        // Weapon 5 laser destroys enemy bullets on contact (INCLUDING LEAD bullets)
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
             if (d < this.laserLength / 2 + enemyBullets[i].size) { // Use laser length for hitbox
-                enemyBullets.splice(i, 1);
+                let bullet = enemyBullets[i];
+                // Weapon 5 can destroy even LEAD bullets
+                if (bullet.bulletType === 'sig' || bullet.bulletType === 'lead' || bullet.destructible) {
+                    bullet.hp -= this.damage;
+                    if (bullet.hp <= 0) {
+                        enemyBullets.splice(i, 1);
+                    }
+                } else {
+                    // Destroy normal bullets instantly
+                    enemyBullets.splice(i, 1);
+                }
             }
         }
     }
@@ -591,14 +685,24 @@ class BarrierWeapon {
             this.timeDecayCounter = 0;
         }
 
-        // Check collision with enemy bullets
+        // Check collision with enemy bullets (INCLUDING LEAD bullets)
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             let d = dist(this.player.x, this.player.y, enemyBullets[i].x, enemyBullets[i].y);
             if (d < this.radius) {
                 // Check if bullet is within barrier coverage angle
                 let bulletAngle = atan2(enemyBullets[i].y - this.player.y, enemyBullets[i].x - this.player.x);
                 if (this.isAngleInCoverage(bulletAngle)) {
-                    enemyBullets.splice(i, 1);
+                    let bullet = enemyBullets[i];
+                    // Weapon 2 can destroy even LEAD bullets
+                    if (bullet.bulletType === 'sig' || bullet.bulletType === 'lead' || bullet.destructible) {
+                        bullet.hp -= 3; // Barrier does 3 damage
+                        if (bullet.hp <= 0) {
+                            enemyBullets.splice(i, 1);
+                        }
+                    } else {
+                        // Destroy normal bullets instantly
+                        enemyBullets.splice(i, 1);
+                    }
                     this.durability--;
                     if (this.durability < 0) this.durability = 0;
                     this.player.subWeaponDurability = this.durability;
@@ -796,6 +900,7 @@ class RotatingWeapon {
         this.angle += this.rotationSpeed;
 
         // Check collision with enemy bullets
+        // Weapon 3 CANNOT destroy LEAD bullets
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             for (let j = 0; j < this.numBullets; j++) {
                 let a = this.angle + (j / this.numBullets) * TWO_PI;
@@ -803,8 +908,19 @@ class RotatingWeapon {
                 let by = this.player.y + sin(a) * this.radius;
                 let d = dist(bx, by, enemyBullets[i].x, enemyBullets[i].y);
                 if (d < 12) {
-                    enemyBullets.splice(i, 1);
-                    break;
+                    let bullet = enemyBullets[i];
+                    // Can only destroy normal bullets and SIG, NOT LEAD
+                    if (bullet.bulletType !== 'lead') {
+                        if (bullet.bulletType === 'sig') {
+                            bullet.hp -= 2;
+                            if (bullet.hp <= 0) {
+                                enemyBullets.splice(i, 1);
+                            }
+                        } else {
+                            enemyBullets.splice(i, 1);
+                        }
+                        break;
+                    }
                 }
             }
         }

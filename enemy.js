@@ -164,6 +164,119 @@ class Enemy {
                 this.spawnInterval = 150;
                 this.lastSpawn = 0;
                 break;
+
+            case 'drobe':
+                // ドローブ：降下して分裂し、シグを3発撃つ。分裂後の殻は耐久力が高い
+                this.size = 14;
+                this.hp = int(3 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = 1.5 * this.difficultyMultiplier;
+                this.scoreValue = 100;
+                this.color = color(200, 150, 100);
+                this.canShoot = true;
+                this.shootInterval = int(90 / this.difficultyMultiplier);
+                this.canSplit = true; // 分裂可能
+                this.hasSplit = false; // まだ分裂していない
+                this.splitThreshold = 0.5; // HP50%で分裂
+                this.bulletType = 'sig'; // シグを発射
+                this.burstShots = 3; // 3発ずつ発射
+                break;
+
+            case 'drobeShell':
+                // ドローブの殻：分裂後の残骸、耐久力が高い
+                this.size = 12;
+                this.hp = int(10 * this.difficultyMultiplier); // 耐久力が高い
+                this.maxHp = this.hp;
+                this.speed = 0.5 * this.difficultyMultiplier;
+                this.scoreValue = 150;
+                this.color = color(150, 120, 80);
+                this.canShoot = false;
+                break;
+
+            case 'yellowGogos':
+                // イエロー・ゴーゴス：中型ザコ。リードを真下または真上の3方向にとぎれなく撃つ。耐久力は7発
+                this.size = 15;
+                this.hp = int(7 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = 1.0 * this.difficultyMultiplier;
+                this.scoreValue = 200;
+                this.color = color(255, 255, 100);
+                this.canShoot = true;
+                this.shootInterval = int(20 / this.difficultyMultiplier); // とぎれなく撃つ
+                this.bulletType = 'lead'; // リード弾
+                this.spreadPattern = 'vertical3'; // 真下/真上3方向
+                break;
+
+            case 'blueGogos':
+                // ブルー・ゴーゴス：中型ザコ。しだれ弾をばらまく。耐久力は4発
+                this.size = 14;
+                this.hp = int(4 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = 1.2 * this.difficultyMultiplier;
+                this.scoreValue = 120;
+                this.color = color(100, 150, 255);
+                this.canShoot = true;
+                this.shootInterval = int(35 / this.difficultyMultiplier);
+                this.bulletType = 'lead'; // しだれ弾（リード）
+                this.spreadPattern = 'scatter'; // ばらまく
+                break;
+
+            case 'redGogos':
+                // レッド・ゴーゴス：中型ザコ。自機を狙ってシグを5発ずつ撃つ。耐久力は7発。凶悪
+                this.size = 15;
+                this.hp = int(7 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = 1.1 * this.difficultyMultiplier;
+                this.scoreValue = 250;
+                this.color = color(255, 50, 50);
+                this.canShoot = true;
+                this.shootInterval = int(60 / this.difficultyMultiplier);
+                this.bulletType = 'sig'; // シグ（ミサイル）
+                this.burstShots = 5; // 5発ずつ
+                this.aimAtPlayer = true; // 自機を狙う
+                break;
+
+            case 'takuwashi':
+                // タクワーシ：自機とX座標を合わせるように左右に動き、正面にくるとシグを猛烈な勢いで連射
+                this.size = 13;
+                this.hp = int(5 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = 1.0 * this.difficultyMultiplier;
+                this.scoreValue = 180;
+                this.color = color(255, 200, 50);
+                this.canShoot = true;
+                this.shootInterval = int(8 / this.difficultyMultiplier); // 猛烈な連射（16連射）
+                this.bulletType = 'sig';
+                this.trackPlayer = true; // X座標を合わせる
+                this.rapidFireRange = 30; // 正面30pxの範囲で連射
+                break;
+
+            case 'degeed':
+                // デギード：ゆっくり降下し、自機を左右から挟み込みにくる
+                this.size = 12;
+                this.hp = int(3 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = 0.8 * this.difficultyMultiplier; // ゆっくり
+                this.scoreValue = 90;
+                this.color = color(150, 255, 150);
+                this.canShoot = false;
+                this.pincer = true; // 挟み込み行動
+                this.pincerSide = (this.x < GAME_WIDTH / 2) ? 'left' : 'right'; // 左右どちら側か
+                break;
+
+            case 'backDegeed':
+                // バック・デギード：画面下から現れて上昇し、自機を左右から挟み込みにくる
+                this.size = 12;
+                this.hp = int(3 * this.difficultyMultiplier);
+                this.maxHp = this.hp;
+                this.speed = -1.2 * this.difficultyMultiplier; // 負の値で上昇
+                this.scoreValue = 100;
+                this.color = color(255, 150, 255);
+                this.canShoot = false;
+                this.pincer = true; // 挟み込み行動
+                this.pincerSide = (this.x < GAME_WIDTH / 2) ? 'left' : 'right';
+                this.fromBottom = true; // 画面下から
+                break;
         }
     }
 
@@ -273,6 +386,77 @@ class Enemy {
                     this.lastSpawn = 0;
                 }
                 break;
+
+            case 'drobe':
+                // ドローブ：降下して、HP50%以下になったら分裂
+                this.y += this.speed;
+                if (this.canSplit && !this.hasSplit && this.hp <= this.maxHp * this.splitThreshold) {
+                    this.split();
+                }
+                break;
+
+            case 'drobeShell':
+                // ドローブの殻：ゆっくり降下
+                this.y += this.speed;
+                break;
+
+            case 'yellowGogos':
+            case 'blueGogos':
+            case 'redGogos':
+                // ゴーゴス系：普通に降下
+                this.y += this.speed;
+                this.x += sin(this.timeAlive * 0.06) * 1;
+                break;
+
+            case 'takuwashi':
+                // タクワーシ：自機のX座標に合わせる
+                this.y += this.speed;
+                if (player && player.alive) {
+                    let dx = player.x - this.x;
+                    if (abs(dx) > this.rapidFireRange) {
+                        // 正面にいない場合は左右に移動
+                        this.x += dx > 0 ? 3 : -3;
+                    }
+                }
+                break;
+
+            case 'degeed':
+                // デギード：ゆっくり降下し、挟み込み
+                this.y += this.speed;
+                if (player && player.alive) {
+                    // 挟み込み行動：プレイヤーの左右に近づく
+                    if (this.pincerSide === 'left') {
+                        let targetX = player.x - 80; // 左側80px
+                        if (this.x > targetX) {
+                            this.x -= 1.5;
+                        }
+                    } else {
+                        let targetX = player.x + 80; // 右側80px
+                        if (this.x < targetX) {
+                            this.x += 1.5;
+                        }
+                    }
+                }
+                break;
+
+            case 'backDegeed':
+                // バック・デギード：上昇して挟み込み
+                this.y += this.speed; // speedが負なので上昇
+                if (player && player.alive) {
+                    // 挟み込み行動
+                    if (this.pincerSide === 'left') {
+                        let targetX = player.x - 80;
+                        if (this.x > targetX) {
+                            this.x -= 1.5;
+                        }
+                    } else {
+                        let targetX = player.x + 80;
+                        if (this.x < targetX) {
+                            this.x += 1.5;
+                        }
+                    }
+                }
+                break;
         }
     }
 
@@ -365,6 +549,115 @@ class Enemy {
                         false,
                         1
                     ));
+                }
+                break;
+
+            case 'drobe':
+                // ドローブ：シグを3発バースト
+                if (!this.burstCounter) this.burstCounter = 0;
+                if (!this.burstDelay) this.burstDelay = 0;
+
+                if (this.burstCounter < this.burstShots) {
+                    if (this.burstDelay === 0) {
+                        enemyBullets.push(new Bullet(
+                            this.x,
+                            this.y,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
+                            false,
+                            1,
+                            6,
+                            'sig' // シグ弾
+                        ));
+                        this.burstCounter++;
+                        this.burstDelay = 5; // 5フレーム間隔
+                    } else {
+                        this.burstDelay--;
+                    }
+                } else {
+                    this.burstCounter = 0;
+                }
+                break;
+
+            case 'yellowGogos':
+                // イエロー・ゴーゴス：リードを真下または真上の3方向
+                let verticalDir = (this.y < GAME_HEIGHT / 2) ? 1 : -1; // 上半分なら下、下半分なら上
+                for (let i = -1; i <= 1; i++) {
+                    let vAngle = (verticalDir > 0 ? PI / 2 : -PI / 2) + i * 0.3;
+                    enemyBullets.push(new Bullet(
+                        this.x,
+                        this.y,
+                        cos(vAngle) * speed,
+                        sin(vAngle) * speed,
+                        false,
+                        1,
+                        5,
+                        'lead' // リード弾
+                    ));
+                }
+                break;
+
+            case 'blueGogos':
+                // ブルー・ゴーゴス：しだれ弾（リード）をばらまく
+                for (let i = 0; i < 6; i++) {
+                    let scatterAngle = (i / 6) * TWO_PI;
+                    enemyBullets.push(new Bullet(
+                        this.x,
+                        this.y,
+                        cos(scatterAngle) * speed * 0.8,
+                        sin(scatterAngle) * speed * 0.8,
+                        false,
+                        1,
+                        5,
+                        'lead' // リード弾
+                    ));
+                }
+                break;
+
+            case 'redGogos':
+                // レッド・ゴーゴス：シグを5発バースト、自機狙い
+                if (!this.burstCounter) this.burstCounter = 0;
+                if (!this.burstDelay) this.burstDelay = 0;
+
+                if (this.burstCounter < this.burstShots) {
+                    if (this.burstDelay === 0) {
+                        enemyBullets.push(new Bullet(
+                            this.x,
+                            this.y,
+                            cos(angle) * speed * 1.2,
+                            sin(angle) * speed * 1.2,
+                            false,
+                            1,
+                            6,
+                            'sig' // シグ弾
+                        ));
+                        this.burstCounter++;
+                        this.burstDelay = 4; // 4フレーム間隔
+                    } else {
+                        this.burstDelay--;
+                    }
+                } else {
+                    this.burstCounter = 0;
+                }
+                break;
+
+            case 'takuwashi':
+                // タクワーシ：正面にいるときシグを猛烈連射
+                if (player && player.alive) {
+                    let xDiff = abs(player.x - this.x);
+                    if (xDiff < this.rapidFireRange) {
+                        // 正面にいる！猛烈連射
+                        enemyBullets.push(new Bullet(
+                            this.x,
+                            this.y,
+                            0,
+                            speed * 1.5,
+                            false,
+                            1,
+                            6,
+                            'sig' // シグ弾
+                        ));
+                    }
                 }
                 break;
         }
@@ -529,6 +822,22 @@ class Enemy {
         }
 
         pop();
+    }
+
+    split() {
+        // ドローブの分裂：殻を生成
+        if (this.type === 'drobe' && !this.hasSplit) {
+            this.hasSplit = true;
+
+            // 殻（drobeShell）を生成
+            if (typeof enemies !== 'undefined') {
+                let shell = new Enemy('drobeShell', this.x, this.y, this.difficultyMultiplier);
+                enemies.push(shell);
+
+                // エフェクトを追加
+                createExplosion(this.x, this.y, 20);
+            }
+        }
     }
 
     isOffscreen() {

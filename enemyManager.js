@@ -18,7 +18,8 @@ class EnemyManager {
 
         // Enemy type probabilities (adjusted by difficulty)
         this.enemyTypes = ['basic', 'shooter', 'weaver', 'tank', 'fast', 'spiral', 'bomber',
-                          'charger', 'tracker', 'bouncer', 'divider', 'spawner'];
+                          'charger', 'tracker', 'bouncer', 'divider', 'spawner',
+                          'drobe', 'yellowGogos', 'blueGogos', 'redGogos', 'takuwashi', 'degeed', 'backDegeed'];
 
         // Wave system
         this.waveNumber = 0;
@@ -110,6 +111,12 @@ class EnemyManager {
         let y = -20;
 
         let enemyType = this.chooseEnemyType();
+
+        // backDegeed spawns from bottom
+        if (enemyType === 'backDegeed') {
+            y = GAME_HEIGHT + 20;
+        }
+
         enemies.push(new Enemy(enemyType, x, y, this.difficultyLevel));
     }
 
@@ -120,53 +127,71 @@ class EnemyManager {
 
         if (diff < 1.5) {
             // Early game - mostly basic enemies
-            if (rand < 0.45) return 'basic';
-            if (rand < 0.7) return 'weaver';
-            if (rand < 0.85) return 'shooter';
-            if (rand < 0.95) return 'fast';
+            if (rand < 0.4) return 'basic';
+            if (rand < 0.65) return 'weaver';
+            if (rand < 0.8) return 'shooter';
+            if (rand < 0.9) return 'fast';
+            if (rand < 0.95) return 'degeed';
             return 'tracker';
         } else if (diff < 2.5) {
-            // Mid game - more variety
-            if (rand < 0.25) return 'basic';
-            if (rand < 0.42) return 'shooter';
-            if (rand < 0.57) return 'weaver';
-            if (rand < 0.7) return 'fast';
-            if (rand < 0.82) return 'spiral';
-            if (rand < 0.9) return 'tracker';
-            if (rand < 0.96) return 'bouncer';
+            // Mid game - more variety + new enemies
+            if (rand < 0.2) return 'basic';
+            if (rand < 0.35) return 'shooter';
+            if (rand < 0.48) return 'weaver';
+            if (rand < 0.6) return 'fast';
+            if (rand < 0.7) return 'spiral';
+            if (rand < 0.78) return 'tracker';
+            if (rand < 0.85) return 'bouncer';
+            if (rand < 0.9) return 'degeed';
+            if (rand < 0.94) return 'drobe';
+            if (rand < 0.97) return 'blueGogos';
             return 'tank';
         } else if (diff < 3.5) {
-            // Late game - tougher enemies
-            if (rand < 0.15) return 'basic';
-            if (rand < 0.28) return 'shooter';
-            if (rand < 0.41) return 'weaver';
-            if (rand < 0.54) return 'fast';
-            if (rand < 0.66) return 'spiral';
-            if (rand < 0.76) return 'charger';
-            if (rand < 0.84) return 'tank';
-            if (rand < 0.92) return 'bouncer';
+            // Late game - tougher enemies + Gogos
+            if (rand < 0.1) return 'basic';
+            if (rand < 0.2) return 'shooter';
+            if (rand < 0.3) return 'weaver';
+            if (rand < 0.4) return 'fast';
+            if (rand < 0.5) return 'spiral';
+            if (rand < 0.58) return 'charger';
+            if (rand < 0.66) return 'tank';
+            if (rand < 0.73) return 'bouncer';
+            if (rand < 0.79) return 'drobe';
+            if (rand < 0.84) return 'yellowGogos';
+            if (rand < 0.89) return 'blueGogos';
+            if (rand < 0.94) return 'backDegeed';
             return 'bomber';
         } else if (diff < 4.5) {
-            // Expert mode - very tough
-            if (rand < 0.12) return 'shooter';
-            if (rand < 0.24) return 'weaver';
-            if (rand < 0.36) return 'fast';
-            if (rand < 0.48) return 'spiral';
-            if (rand < 0.6) return 'charger';
-            if (rand < 0.72) return 'tank';
-            if (rand < 0.82) return 'bomber';
-            if (rand < 0.9) return 'divider';
+            // Expert mode - very tough + dangerous enemies
+            if (rand < 0.08) return 'shooter';
+            if (rand < 0.16) return 'weaver';
+            if (rand < 0.24) return 'fast';
+            if (rand < 0.32) return 'spiral';
+            if (rand < 0.42) return 'charger';
+            if (rand < 0.52) return 'tank';
+            if (rand < 0.62) return 'bomber';
+            if (rand < 0.7) return 'divider';
+            if (rand < 0.77) return 'drobe';
+            if (rand < 0.83) return 'yellowGogos';
+            if (rand < 0.88) return 'blueGogos';
+            if (rand < 0.92) return 'redGogos'; // 凶悪
+            if (rand < 0.96) return 'takuwashi'; // 16連射
             return 'bouncer';
         } else {
-            // Insane mode - extremely tough
-            if (rand < 0.1) return 'shooter';
-            if (rand < 0.2) return 'fast';
-            if (rand < 0.32) return 'spiral';
-            if (rand < 0.44) return 'charger';
-            if (rand < 0.58) return 'tank';
-            if (rand < 0.7) return 'bomber';
-            if (rand < 0.82) return 'divider';
-            if (rand < 0.92) return 'bouncer';
+            // Insane mode - extremely tough + all dangerous enemies
+            if (rand < 0.06) return 'shooter';
+            if (rand < 0.12) return 'fast';
+            if (rand < 0.2) return 'spiral';
+            if (rand < 0.3) return 'charger';
+            if (rand < 0.42) return 'tank';
+            if (rand < 0.52) return 'bomber';
+            if (rand < 0.62) return 'divider';
+            if (rand < 0.7) return 'drobe';
+            if (rand < 0.77) return 'yellowGogos';
+            if (rand < 0.83) return 'blueGogos';
+            if (rand < 0.88) return 'redGogos'; // 凶悪
+            if (rand < 0.92) return 'takuwashi'; // 16連射
+            if (rand < 0.96) return 'backDegeed';
             return 'spawner';
         }
     }
