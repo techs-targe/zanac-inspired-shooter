@@ -203,7 +203,8 @@ class InputManager {
         const dy = y - dpad.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < dpad.size / 2) {
+        // D-pad hit detection: radius * 1.2 for easier tapping
+        if (distance < (dpad.size / 2) * 1.2) {
             // Inside D-pad - allow diagonal movement!
             // Mark this touch as controlling the D-pad
             this.activeTouches.dpad = touchId;
@@ -243,8 +244,10 @@ class InputManager {
     isInsideButton(x, y, button) {
         const dx = x - button.x;
         const dy = y - button.y;
-        // Use diameter (size * 2) for hit detection to match visual size
-        return Math.sqrt(dx * dx + dy * dy) < (button.size * 2);
+        // CRITICAL FIX: Use radius (button.size) for hit detection
+        // Visual: ellipse(x, y, size*2, size*2) = diameter of size*2, radius = size
+        // Hit detection: distance < size * 1.2 (20% larger for easier tapping)
+        return Math.sqrt(dx * dx + dy * dy) < (button.size * 1.2);
     }
 
     update() {
@@ -407,12 +410,12 @@ class InputManager {
         // Update button positions based on current canvas size
         // Called every frame to ensure positions match display
 
-        // D-pad on bottom left - 20px up from bottom
+        // D-pad on bottom left - 30px up from bottom
         this.touchButtons.dpad.x = this.touchButtons.dpad.size / 2 + 10;
-        this.touchButtons.dpad.y = height - 20; // 20px up
+        this.touchButtons.dpad.y = height - 30; // 30px up
 
-        // All action buttons - 20px up from bottom
-        const buttonY = height - 20;
+        // All action buttons - 30px up from bottom
+        const buttonY = height - 30;
 
         // Pause button at bottom center + shift right by 10 - shift left by 5
         this.touchButtons.pauseBtn.x = width / 2 + 10 - 5;
