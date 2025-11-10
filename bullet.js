@@ -96,13 +96,7 @@ class Bullet {
                 fill(255, 150, 50, 80);
                 ellipse(this.x, this.y, this.size * 3, this.size * 2);
 
-                // HP indicator (if damaged)
-                if (this.hp < this.maxHp) {
-                    fill(255, 255, 0);
-                    textSize(10);
-                    textAlign(CENTER, CENTER);
-                    text(this.hp, this.x, this.y - this.size * 1.5);
-                }
+                // HP indicator removed - not needed for gameplay clarity
             } else if (this.bulletType === 'lead') {
                 // リード（しだれ弾）- 青紫色、涙型/水滴型、基本破壊不能
                 push();
