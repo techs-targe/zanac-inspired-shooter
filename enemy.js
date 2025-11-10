@@ -478,7 +478,9 @@ class Enemy {
                     cos(angle) * speed,
                     sin(angle) * speed,
                     false,
-                    1
+                    1,
+                    4,
+                    'sig' // シグ弾
                 ));
                 break;
 
@@ -492,7 +494,9 @@ class Enemy {
                         cos(spreadAngle) * speed,
                         sin(spreadAngle) * speed,
                         false,
-                        1
+                        1,
+                        4,
+                        'sig' // シグ弾
                     ));
                 }
                 break;
@@ -506,7 +510,9 @@ class Enemy {
                     cos(spiralAngle) * speed,
                     sin(spiralAngle) * speed,
                     false,
-                    1
+                    1,
+                    4,
+                    'sig' // シグ弾
                 ));
                 break;
 
@@ -520,7 +526,9 @@ class Enemy {
                         cos(bombAngle) * speed,
                         sin(bombAngle) * speed,
                         false,
-                        1
+                        1,
+                        4,
+                        'sig' // シグ弾
                     ));
                 }
                 break;
@@ -533,7 +541,9 @@ class Enemy {
                     cos(angle) * speed,
                     sin(angle) * speed,
                     false,
-                    1
+                    1,
+                    4,
+                    'sig' // シグ弾
                 ));
                 break;
 
@@ -547,7 +557,9 @@ class Enemy {
                         cos(spreadAngle) * speed,
                         sin(spreadAngle) * speed,
                         false,
-                        1
+                        1,
+                        4,
+                        'sig' // シグ弾
                     ));
                 }
                 break;
