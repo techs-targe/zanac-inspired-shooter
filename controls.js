@@ -69,24 +69,25 @@ class InputManager {
         setTimeout(() => {
             const rect = canvas.getBoundingClientRect();
 
-            // Position all controls at the very bottom to avoid screen overlap
-            const bottomY = rect.height - 60;  // Base Y position for all controls
+            // Position all controls near the bottom with safe margins
+            const bottomY = rect.height - 100;  // Base Y position, moved higher for safety
 
             // D-pad on bottom left
-            this.touchButtons.dpad.x = 70;
+            this.touchButtons.dpad.x = 80;
             this.touchButtons.dpad.y = bottomY;
 
             // Pause button at bottom center
             this.touchButtons.pauseBtn.x = rect.width / 2;
-            this.touchButtons.pauseBtn.y = bottomY;
+            this.touchButtons.pauseBtn.y = bottomY + 10;
 
-            // B button (sub fire) on bottom right, slightly above
-            this.touchButtons.buttonB.x = rect.width - 65;
-            this.touchButtons.buttonB.y = bottomY - 35;
+            // Action buttons on bottom right - vertical layout
+            // B button (sub fire, blue) - upper position
+            this.touchButtons.buttonB.x = rect.width - 70;
+            this.touchButtons.buttonB.y = bottomY - 30;
 
-            // A button (main fire) on bottom right, below B
-            this.touchButtons.buttonA.x = rect.width - 65;
-            this.touchButtons.buttonA.y = bottomY + 35;
+            // A button (main fire, red) - lower position
+            this.touchButtons.buttonA.x = rect.width - 70;
+            this.touchButtons.buttonA.y = bottomY + 25;
         }, 100);
 
         // Touch event handlers
@@ -253,8 +254,8 @@ class InputManager {
         if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) this.down = true;  // S
 
         // Fire keys
-        if (keyIsDown(32) || keyIsDown(90) || keyIsDown(88)) this.mainFire = true; // SPACE, Z, or X
-        if (keyIsDown(67) || keyIsDown(86)) this.subFire = true;  // C or V
+        if (keyIsDown(32) || keyIsDown(88)) this.mainFire = true; // SPACE or X
+        if (keyIsDown(90) || keyIsDown(67) || keyIsDown(86)) this.subFire = true;  // Z, C, or V
     }
 
     updateGamepad() {

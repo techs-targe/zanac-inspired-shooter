@@ -875,6 +875,11 @@ function checkCollisions() {
 }
 
 function addScore(points) {
+    // Don't add score during game over
+    if (gameState === GAME_STATE.GAME_OVER) {
+        return;
+    }
+
     let oldScore = score;
     score += points;
 
