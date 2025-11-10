@@ -243,10 +243,7 @@ function updateGame() {
                     continue;
                 }
 
-                // Ground enemy shooting
-                if (groundEnemies[i].canShoot && frameCount % groundEnemies[i].shootInterval === 0) {
-                    groundEnemies[i].shoot();
-                }
+                // Ground enemy shooting is now handled in update()
             }
         }
 

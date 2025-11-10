@@ -876,7 +876,8 @@ class GroundEnemy {
         this.maxHp = this.hp;
         this.scoreValue = 50 + level * 30;
         this.canShoot = true;
-        this.shootInterval = 80 - level * 5;
+        this.shootInterval = 60 - level * 3; // 短縮: 60-57フレーム = 1秒に1回
+        this.shootTimer = 0; // 内部タイマー追加
         this.angle = 0;
         this.targetAngle = 0;
         this.isGround = true; // Flag to identify ground enemies
@@ -902,6 +903,15 @@ class GroundEnemy {
             while (angleDiff > PI) angleDiff -= TWO_PI;
             while (angleDiff < -PI) angleDiff += TWO_PI;
             this.angle += angleDiff * 0.1;
+        }
+
+        // Update shoot timer and shoot when ready
+        if (this.canShoot && this.y > 0 && this.y < GAME_HEIGHT) {
+            this.shootTimer++;
+            if (this.shootTimer >= this.shootInterval) {
+                this.shoot();
+                this.shootTimer = 0; // リセット
+            }
         }
     }
 
