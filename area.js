@@ -523,7 +523,7 @@ class AreaManager {
         this.bossIntroTimer++;
 
         if (this.bossIntroPhase === 1) {
-            // Phase 1: Scroll ground enemies in at high speed (90 frames = 1.5 seconds)
+            // Phase 1: Scroll ground enemies in at high speed (120 frames = 2 seconds)
             this.scrollSpeed = this.bossIntroScrollSpeed;
 
             // Set scroll speed for all ground enemies
@@ -531,7 +531,7 @@ class AreaManager {
                 enemy.scrollSpeed = this.bossIntroScrollSpeed;
             }
 
-            if (this.bossIntroTimer >= 90) {
+            if (this.bossIntroTimer >= 120) {
                 // Transition to deceleration phase
                 this.bossIntroPhase = 2;
                 this.bossIntroTimer = 0;
@@ -574,7 +574,7 @@ class AreaManager {
         const centerX = GAME_WIDTH / 2;
         const ySpacing = 60;
         const bottomY = GAME_HEIGHT - 80;
-        const startOffsetY = -900; // Spawn above screen (adjusted for proper display)
+        const startOffsetY = -600; // Spawn above screen - scroll in becomes visible
 
         // Helper to calculate initial spawn Y position (above screen)
         // All enemies spawn at startOffsetY + their vertical offset
