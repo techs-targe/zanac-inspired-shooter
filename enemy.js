@@ -249,7 +249,7 @@ class Enemy {
                 this.bulletType = 'sig';
                 this.trackPlayer = true; // X座標を合わせる
                 this.rapidFireRange = 30; // 30pxに縮小（より正確に正面に来る必要がある）
-                this.trackSpeed = 4; // 追跡速度を設定
+                this.trackSpeed = 6; // 追跡速度を上げる（逃げないように）
                 break;
 
             case 'degeed':
@@ -410,17 +410,18 @@ class Enemy {
                 break;
 
             case 'takuwashi':
-                // タクワーシ：自機のX座標に合わせる（積極的に近づく）
+                // タクワーシ：自機のX座標に合わせる（積極的に近づく・逃げない）
                 this.y += this.speed;
                 if (player && player.alive) {
                     let dx = player.x - this.x;
-                    // 常にプレイヤーの方向に移動（逃げない）
-                    if (abs(dx) > 5) { // 5px以上離れていたら追跡
-                        let moveSpeed = this.trackSpeed || 4;
-                        this.x += dx > 0 ? moveSpeed : -moveSpeed;
-                        // 画面端制約を追加（画面外に出ないようにする）
-                        this.x = constrain(this.x, this.size, GAME_WIDTH - this.size);
-                    }
+                    // 常にプレイヤーの方向に移動（条件なし・逃げない）
+                    let moveSpeed = this.trackSpeed || 6; // 速度を上げる
+                    // 距離に応じた移動（近い時は遅く、遠い時は速く）
+                    let distance = abs(dx);
+                    let actualSpeed = min(moveSpeed, distance);
+                    this.x += dx > 0 ? actualSpeed : -actualSpeed;
+                    // 画面端制約を追加（画面外に出ないようにする）
+                    this.x = constrain(this.x, this.size, GAME_WIDTH - this.size);
                 }
                 break;
 
