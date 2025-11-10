@@ -1227,67 +1227,315 @@ class BossEnemy {
     }
 
     shoot() {
-        if (!this.canShoot || this.attackCooldown > 0 || this.y < this.targetY) return;
+        if (!this.canShoot || this.y < this.targetY) return;
         if (!player || !player.alive) return;
 
-        this.attackCooldown = this.shootInterval;
+        // Area-specific shooting patterns (1-12) with continuous fire
+        // Difficulty scales with area number: more bullets, faster fire, complex patterns
 
-        let speed = 4.5; // Reduced from 6 to 4.5 (75% speed)
+        let baseSpeed = 4 + (this.areaNumber * 0.15); // Speed increases with area
+        let playerAngle = atan2(player.y - this.y, player.x - this.x);
 
-        // エリア1-3: 全弾シグ
-        // エリア4-12: 攻撃パターンによってシグ/リード使い分け
-        let isEarlyArea = this.areaNumber <= 3;
-
-        switch(this.phase) {
-            case 1: // Phase 1 - aimed shots (シグ弾)
+        // Area-specific patterns
+        switch(this.areaNumber) {
+            case 1: // Area 1: Simple aimed shots (beginner friendly)
                 {
-                    let angle = atan2(player.y - this.y, player.x - this.x);
                     enemyBullets.push(new Bullet(
-                        this.x,
-                        this.y + this.size / 2,
-                        cos(angle) * speed,
-                        sin(angle) * speed,
-                        false,
-                        1,
-                        5,
-                        'sig' // Phase 1は全エリアでシグ
+                        this.x, this.y + this.size / 2,
+                        cos(playerAngle) * baseSpeed,
+                        sin(playerAngle) * baseSpeed,
+                        false, 1, 5, 'sig'
                     ));
                 }
                 break;
 
-            case 2: // Phase 2 - spread pattern (エリア4-12: 外側リード、中央シグ)
-                for (let i = -2; i <= 2; i++) {
-                    let angle = atan2(player.y - this.y, player.x - this.x) + i * 0.3;
-                    // エリア1-3: 全弾シグ / エリア4-12: 外側(-2,2)リード、中央(-1,0,1)シグ
-                    let bulletType = (isEarlyArea || (i >= -1 && i <= 1)) ? 'sig' : 'lead';
-                    enemyBullets.push(new Bullet(
-                        this.x,
-                        this.y + this.size / 2,
-                        cos(angle) * speed,
-                        sin(angle) * speed,
-                        false,
-                        1,
-                        5,
-                        bulletType
-                    ));
+            case 2: // Area 2: Aimed + small 3-way spread
+                {
+                    for (let i = -1; i <= 1; i++) {
+                        let angle = playerAngle + i * 0.25;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, 'sig'
+                        ));
+                    }
                 }
                 break;
 
-            case 3: // Phase 3 - circular barrage (エリア4-12: 偶数リード、奇数シグ)
-                for (let i = 0; i < 8; i++) {
-                    let angle = (i / 8) * TWO_PI + this.angle;
-                    // エリア1-3: 全弾シグ / エリア4-12: 偶数(0,2,4,6)リード、奇数(1,3,5,7)シグ
-                    let bulletType = (isEarlyArea || i % 2 === 1) ? 'sig' : 'lead';
+            case 3: // Area 3: 5-way spread + aimed shot
+                {
+                    // Aimed center shot
                     enemyBullets.push(new Bullet(
-                        this.x,
-                        this.y,
-                        cos(angle) * speed,
-                        sin(angle) * speed,
-                        false,
-                        1,
-                        5,
-                        bulletType
+                        this.x, this.y + this.size / 2,
+                        cos(playerAngle) * baseSpeed,
+                        sin(playerAngle) * baseSpeed,
+                        false, 1, 5, 'sig'
                     ));
+                    // Spread shots
+                    for (let i = -2; i <= 2; i++) {
+                        if (i === 0) continue;
+                        let angle = playerAngle + i * 0.3;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, 'sig'
+                        ));
+                    }
+                }
+                break;
+
+            case 4: // Area 4: Wide 7-way spread with Lead bullets on edges
+                {
+                    for (let i = -3; i <= 3; i++) {
+                        let angle = playerAngle + i * 0.35;
+                        let bulletType = (i === -3 || i === 3) ? 'lead' : 'sig';
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, bulletType
+                        ));
+                    }
+                }
+                break;
+
+            case 5: // Area 5: Spread + circular (8-way)
+                {
+                    // Player-aimed spread
+                    for (let i = -2; i <= 2; i++) {
+                        let angle = playerAngle + i * 0.3;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, 'sig'
+                        ));
+                    }
+                    // Circular pattern
+                    if (this.moveTimer % 2 === 0) {
+                        for (let i = 0; i < 8; i++) {
+                            let angle = (i / 8) * TWO_PI + this.angle;
+                            enemyBullets.push(new Bullet(
+                                this.x, this.y,
+                                cos(angle) * (baseSpeed * 0.8),
+                                sin(angle) * (baseSpeed * 0.8),
+                                false, 1, 5, 'lead'
+                            ));
+                        }
+                    }
+                }
+                break;
+
+            case 6: // Area 6: Dense spread + side shots
+                {
+                    // Wide 9-way spread
+                    for (let i = -4; i <= 4; i++) {
+                        let angle = playerAngle + i * 0.3;
+                        let bulletType = (Math.abs(i) >= 3) ? 'lead' : 'sig';
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, bulletType
+                        ));
+                    }
+                    // Side shots
+                    enemyBullets.push(new Bullet(this.x, this.y, -baseSpeed, 0, false, 1, 5, 'lead'));
+                    enemyBullets.push(new Bullet(this.x, this.y, baseSpeed, 0, false, 1, 5, 'lead'));
+                }
+                break;
+
+            case 7: // Area 7: Spiral + dense circular
+                {
+                    // Aimed shots
+                    for (let i = -2; i <= 2; i++) {
+                        let angle = playerAngle + i * 0.25;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, 'sig'
+                        ));
+                    }
+                    // Spiral pattern (12-way rotating)
+                    for (let i = 0; i < 12; i++) {
+                        let angle = (i / 12) * TWO_PI + this.angle * 2;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * (baseSpeed * 0.7),
+                            sin(angle) * (baseSpeed * 0.7),
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                }
+                break;
+
+            case 8: // Area 8: Complex multi-pattern barrage
+                {
+                    // Dense 11-way spread
+                    for (let i = -5; i <= 5; i++) {
+                        let angle = playerAngle + i * 0.25;
+                        let bulletType = (Math.abs(i) >= 4) ? 'lead' : 'sig';
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, bulletType
+                        ));
+                    }
+                    // Circular barrage
+                    if (this.moveTimer % 3 === 0) {
+                        for (let i = 0; i < 16; i++) {
+                            let angle = (i / 16) * TWO_PI + this.angle;
+                            enemyBullets.push(new Bullet(
+                                this.x, this.y,
+                                cos(angle) * baseSpeed,
+                                sin(angle) * baseSpeed,
+                                false, 1, 5, 'lead'
+                            ));
+                        }
+                    }
+                }
+                break;
+
+            case 9: // Area 9: Spiral + tracking + multi-directional
+                {
+                    // Triple aimed shots
+                    for (let i = -1; i <= 1; i++) {
+                        let angle = playerAngle + i * 0.2;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * (baseSpeed * 1.1),
+                            sin(angle) * (baseSpeed * 1.1),
+                            false, 1, 5, 'sig'
+                        ));
+                    }
+                    // Dense spiral (16-way)
+                    for (let i = 0; i < 16; i++) {
+                        let angle = (i / 16) * TWO_PI + this.angle * 1.5;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * (baseSpeed * 0.8),
+                            sin(angle) * (baseSpeed * 0.8),
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                    // Cross pattern
+                    for (let i = 0; i < 4; i++) {
+                        let angle = (i / 4) * TWO_PI;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                }
+                break;
+
+            case 10: // Area 10: Extreme density barrage
+                {
+                    // Wide 13-way spread
+                    for (let i = -6; i <= 6; i++) {
+                        let angle = playerAngle + i * 0.22;
+                        let bulletType = (Math.abs(i) >= 5) ? 'lead' : 'sig';
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, bulletType
+                        ));
+                    }
+                    // Dense circular (20-way)
+                    for (let i = 0; i < 20; i++) {
+                        let angle = (i / 20) * TWO_PI + this.angle;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * (baseSpeed * 0.9),
+                            sin(angle) * (baseSpeed * 0.9),
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                }
+                break;
+
+            case 11: // Area 11: Massive multi-pattern assault
+                {
+                    // Ultra-wide 15-way spread
+                    for (let i = -7; i <= 7; i++) {
+                        let angle = playerAngle + i * 0.2;
+                        let bulletType = (Math.abs(i) >= 6) ? 'lead' : 'sig';
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, bulletType
+                        ));
+                    }
+                    // Double spiral (24-way)
+                    for (let i = 0; i < 24; i++) {
+                        let angle = (i / 24) * TWO_PI + this.angle * 2;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * (baseSpeed * 0.85),
+                            sin(angle) * (baseSpeed * 0.85),
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                    // Side barrages
+                    for (let i = 0; i < 3; i++) {
+                        enemyBullets.push(new Bullet(this.x, this.y, -baseSpeed, i * 0.5, false, 1, 5, 'lead'));
+                        enemyBullets.push(new Bullet(this.x, this.y, baseSpeed, i * 0.5, false, 1, 5, 'lead'));
+                    }
+                }
+                break;
+
+            case 12: // Area 12: FINAL BOSS - Ultimate barrage
+                {
+                    // Maximum 17-way spread
+                    for (let i = -8; i <= 8; i++) {
+                        let angle = playerAngle + i * 0.18;
+                        let bulletType = (Math.abs(i) >= 6) ? 'lead' : 'sig';
+                        let speed = baseSpeed * (Math.abs(i) % 2 === 0 ? 1.1 : 0.9);
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y + this.size / 2,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
+                            false, 1, 5, bulletType
+                        ));
+                    }
+                    // Triple spiral (32-way)
+                    for (let i = 0; i < 32; i++) {
+                        let angle = (i / 32) * TWO_PI + this.angle * 2.5;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * (baseSpeed * 0.8),
+                            sin(angle) * (baseSpeed * 0.8),
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                    // Dense circular (24-way)
+                    for (let i = 0; i < 24; i++) {
+                        let angle = (i / 24) * TWO_PI - this.angle;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * baseSpeed,
+                            sin(angle) * baseSpeed,
+                            false, 1, 5, 'lead'
+                        ));
+                    }
+                    // All-direction barrage
+                    for (let i = 0; i < 8; i++) {
+                        let angle = (i / 8) * TWO_PI;
+                        enemyBullets.push(new Bullet(
+                            this.x, this.y,
+                            cos(angle) * (baseSpeed * 1.2),
+                            sin(angle) * (baseSpeed * 1.2),
+                            false, 1, 5, 'sig'
+                        ));
+                    }
                 }
                 break;
         }
