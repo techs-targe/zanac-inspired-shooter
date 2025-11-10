@@ -407,23 +407,23 @@ class InputManager {
         // Update button positions based on current canvas size
         // Called every frame to ensure positions match display
 
-        // D-pad on bottom left - center at bottom edge
+        // D-pad on bottom left - 20px up from bottom
         this.touchButtons.dpad.x = this.touchButtons.dpad.size / 2 + 10;
-        this.touchButtons.dpad.y = height; // Use p5.js height
+        this.touchButtons.dpad.y = height - 20; // 20px up
 
-        // All action buttons at the very bottom
-        const buttonY = height;
+        // All action buttons - 20px up from bottom
+        const buttonY = height - 20;
 
-        // Pause button at bottom center + shift right by 10
-        this.touchButtons.pauseBtn.x = width / 2 + 10;
+        // Pause button at bottom center + shift right by 10 - shift left by 5
+        this.touchButtons.pauseBtn.x = width / 2 + 10 - 5;
         this.touchButtons.pauseBtn.y = buttonY;
 
-        // A button (main fire, red) - at right edge + shift right by 20
-        this.touchButtons.buttonA.x = width - this.touchButtons.buttonA.size - 10 + 20;
+        // A button (main fire, red) - at right edge + shift right by 20 - shift left by 5
+        this.touchButtons.buttonA.x = width - this.touchButtons.buttonA.size - 10 + 20 - 5;
         this.touchButtons.buttonA.y = buttonY;
 
-        // B button (sub fire, blue) - right side, left of A + shift right by 20
-        this.touchButtons.buttonB.x = width - this.touchButtons.buttonA.size * 2 - this.touchButtons.buttonB.size - 20 + 20;
+        // B button (sub fire, blue) - right side, left of A + shift right by 20 - shift left by 5
+        this.touchButtons.buttonB.x = width - this.touchButtons.buttonA.size * 2 - this.touchButtons.buttonB.size - 20 + 20 - 5;
         this.touchButtons.buttonB.y = buttonY;
     }
 
