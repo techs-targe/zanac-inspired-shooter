@@ -12,12 +12,12 @@ class InputManager {
         this.subFire = false;
         this.pause = false;
 
-        // Touch control state
+        // Touch control state (size = RADIUS for all buttons)
         this.touchButtons = {
-            dpad: { x: 80, y: 0, size: 120 },   // D-pad
-            buttonA: { x: 0, y: 0, size: 40 },  // Main fire (larger)
-            buttonB: { x: 0, y: 0, size: 40 },  // Sub fire (larger)
-            pauseBtn: { x: 0, y: 0, size: 25 }  // Pause button
+            dpad: { x: 80, y: 0, size: 60 },    // D-pad (radius 60, diameter 120)
+            buttonA: { x: 0, y: 0, size: 40 },  // Main fire (radius 40, diameter 80)
+            buttonB: { x: 0, y: 0, size: 40 },  // Sub fire (radius 40, diameter 80)
+            pauseBtn: { x: 0, y: 0, size: 25 }  // Pause button (radius 25, diameter 50)
         };
 
         // Active touches for each button
@@ -101,33 +101,39 @@ class InputManager {
             // Priority: A button > B button > Pause > D-pad
 
             // Check A button (main fire)
+            let distA = Math.sqrt((x - this.touchButtons.buttonA.x)**2 + (y - this.touchButtons.buttonA.y)**2);
             if (this.isInsideButton(x, y, this.touchButtons.buttonA)) {
-                console.log('  → A button pressed');
+                console.log(`  → A button pressed (dist:${distA.toFixed(1)}, threshold:${(this.touchButtons.buttonA.size * 1.2).toFixed(1)})`);
                 this.mainFire = true;
                 this.activeTouches.mainFire = touch.identifier;
                 continue; // Skip other checks for this touch
             }
 
             // Check B button (sub fire)
+            let distB = Math.sqrt((x - this.touchButtons.buttonB.x)**2 + (y - this.touchButtons.buttonB.y)**2);
             if (this.isInsideButton(x, y, this.touchButtons.buttonB)) {
-                console.log('  → B button pressed');
+                console.log(`  → B button pressed (dist:${distB.toFixed(1)}, threshold:${(this.touchButtons.buttonB.size * 1.2).toFixed(1)})`);
                 this.subFire = true;
                 this.activeTouches.subFire = touch.identifier;
                 continue; // Skip other checks for this touch
             }
 
             // Check pause button (only trigger once per touch)
+            let distP = Math.sqrt((x - this.touchButtons.pauseBtn.x)**2 + (y - this.touchButtons.pauseBtn.y)**2);
             if (this.isInsideButton(x, y, this.touchButtons.pauseBtn) && !this.activeTouches.pause) {
-                console.log('  → Pause button pressed');
+                console.log(`  → Pause button pressed (dist:${distP.toFixed(1)}, threshold:${(this.touchButtons.pauseBtn.size * 1.2).toFixed(1)})`);
                 this.pause = true;
                 this.activeTouches.pause = touch.identifier;
                 continue; // Skip other checks for this touch
             }
 
             // Check D-pad (lowest priority)
+            let distD = Math.sqrt((x - this.touchButtons.dpad.x)**2 + (y - this.touchButtons.dpad.y)**2);
             const dpadHit = this.checkDpad(x, y, touch.identifier);
             if (dpadHit) {
-                console.log(`  → D-pad: ${dpadHit}`);
+                console.log(`  → D-pad: ${dpadHit} (dist:${distD.toFixed(1)}, threshold:${(this.touchButtons.dpad.size * 1.2).toFixed(1)})`);
+            } else {
+                console.log(`  → Miss! Distances: A:${distA.toFixed(1)} B:${distB.toFixed(1)} P:${distP.toFixed(1)} D:${distD.toFixed(1)}`);
             }
         }
     }
@@ -203,8 +209,8 @@ class InputManager {
         const dy = y - dpad.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // D-pad hit detection: radius * 1.2 for easier tapping
-        if (distance < (dpad.size / 2) * 1.2) {
+        // D-pad hit detection: radius * 1.2 for easier tapping (size is already radius)
+        if (distance < dpad.size * 1.2) {
             // Inside D-pad - allow diagonal movement!
             // Mark this touch as controlling the D-pad
             this.activeTouches.dpad = touchId;
@@ -411,7 +417,8 @@ class InputManager {
         // Called every frame to ensure positions match display
 
         // D-pad on bottom left - 30px up from bottom
-        this.touchButtons.dpad.x = this.touchButtons.dpad.size / 2 + 10;
+        // Position: left edge at 10px, so center = radius + 10
+        this.touchButtons.dpad.x = this.touchButtons.dpad.size + 10;
         this.touchButtons.dpad.y = height - 30; // 30px up
 
         // All action buttons - 30px up from bottom
@@ -458,20 +465,20 @@ class InputManager {
         fill(255, 255, 255, 30);
         stroke(255, 255, 255, 100);
         strokeWeight(2);
-        ellipse(dpad.x, dpad.y, dpad.size, dpad.size);
+        ellipse(dpad.x, dpad.y, dpad.size * 2, dpad.size * 2); // FIXED: size * 2 for diameter
 
-        // D-pad directions (scaled to match size)
+        // D-pad directions (scaled to match new size: radius 60)
         fill(255, 255, 255, this.left ? 80 : 30);
-        triangle(dpad.x - 35, dpad.y, dpad.x - 18, dpad.y - 8, dpad.x - 18, dpad.y + 8);
+        triangle(dpad.x - 40, dpad.y, dpad.x - 20, dpad.y - 10, dpad.x - 20, dpad.y + 10);
 
         fill(255, 255, 255, this.right ? 80 : 30);
-        triangle(dpad.x + 35, dpad.y, dpad.x + 18, dpad.y - 8, dpad.x + 18, dpad.y + 8);
+        triangle(dpad.x + 40, dpad.y, dpad.x + 20, dpad.y - 10, dpad.x + 20, dpad.y + 10);
 
         fill(255, 255, 255, this.up ? 80 : 30);
-        triangle(dpad.x, dpad.y - 35, dpad.x - 8, dpad.y - 18, dpad.x + 8, dpad.y - 18);
+        triangle(dpad.x, dpad.y - 40, dpad.x - 10, dpad.y - 20, dpad.x + 10, dpad.y - 20);
 
         fill(255, 255, 255, this.down ? 80 : 30);
-        triangle(dpad.x, dpad.y + 35, dpad.x - 8, dpad.y + 18, dpad.x + 8, dpad.y + 18);
+        triangle(dpad.x, dpad.y + 40, dpad.x - 10, dpad.y + 20, dpad.x + 10, dpad.y + 20);
 
         // A button (main fire)
         const btnA = this.touchButtons.buttonA;
