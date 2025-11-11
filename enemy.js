@@ -39,7 +39,9 @@ class Enemy {
                 this.scoreValue = 30;
                 this.color = color(255, 150, 50);
                 this.canShoot = true;
-                this.shootInterval = int(50 / this.difficultyMultiplier);
+                // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
+                let shooterFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
+                this.shootInterval = int(50 / shooterFireRate);
                 break;
 
             case 'weaver':
@@ -62,7 +64,9 @@ class Enemy {
                 this.scoreValue = 100;
                 this.color = color(255, 50, 50);
                 this.canShoot = true;
-                this.shootInterval = int(40 / this.difficultyMultiplier);
+                // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
+                let tankFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
+                this.shootInterval = int(40 / tankFireRate);
                 break;
 
             case 'fast':
@@ -85,7 +89,9 @@ class Enemy {
                 this.scoreValue = 60;
                 this.color = color(255, 100, 255);
                 this.canShoot = true;
-                this.shootInterval = int(45 / this.difficultyMultiplier);
+                // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
+                let spiralFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
+                this.shootInterval = int(45 / spiralFireRate);
                 break;
 
             case 'bomber':
@@ -97,7 +103,9 @@ class Enemy {
                 this.scoreValue = 80;
                 this.color = color(255, 200, 50);
                 this.canShoot = true;
-                this.shootInterval = int(70 / this.difficultyMultiplier);
+                // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
+                let bomberFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
+                this.shootInterval = int(70 / bomberFireRate);
                 break;
 
             case 'charger':
@@ -123,7 +131,9 @@ class Enemy {
                 this.scoreValue = 55;
                 this.color = color(100, 255, 255);
                 this.canShoot = true;
-                this.shootInterval = int(60 / this.difficultyMultiplier);
+                // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
+                let trackerFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
+                this.shootInterval = int(60 / trackerFireRate);
                 this.trackingSpeed = 2.5 * this.difficultyMultiplier;
                 break;
 
@@ -1108,13 +1118,13 @@ class BossEnemy {
         let hpPercent = this.hp / this.maxHp;
         if (hpPercent > 0.66) {
             this.phase = 1;
-            this.shootInterval = 30;
+            this.shootInterval = 60; // Doubled: 30 → 60 (half fire rate)
         } else if (hpPercent > 0.33) {
             this.phase = 2;
-            this.shootInterval = 20;
+            this.shootInterval = 40; // Doubled: 20 → 40 (half fire rate)
         } else {
             this.phase = 3;
-            this.shootInterval = 15;
+            this.shootInterval = 30; // Doubled: 15 → 30 (half fire rate)
         }
 
         // Unique movement pattern per area (1-12)

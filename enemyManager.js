@@ -233,6 +233,9 @@ class EnemyManager {
 
     onPlayerHit() {
         this.playerHits += 3; // Significant penalty
+        // Reduce difficulty by 1.0 on hit (helps struggling players)
+        this.difficultyLevel -= 1.0;
+        this.difficultyLevel = constrain(this.difficultyLevel, this.minDifficulty, this.maxDifficulty);
     }
 
     onScoreGained(points) {

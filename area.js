@@ -872,6 +872,14 @@ class AreaManager {
         this.bossActive = false;
         this.bossDefeated = true;
         this.bossDefeatedTimer = 180; // 3 second delay (60 fps * 3)
+
+        // Check if final boss (Area 12) was defeated
+        if (this.currentArea === this.maxArea) {
+            // Trigger ending after delay
+            setTimeout(() => {
+                gameState = GAME_STATE.ENDING;
+            }, 3000); // 3 second delay to show explosion
+        }
     }
 
     nextArea() {

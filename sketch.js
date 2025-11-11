@@ -8,7 +8,8 @@ const GAME_STATE = {
     TITLE: 0,
     PLAYING: 1,
     GAME_OVER: 2,
-    PAUSED: 3
+    PAUSED: 3,
+    ENDING: 4
 };
 
 // Global game variables
@@ -90,6 +91,8 @@ function draw() {
                 initGame();
             } else if (gameState === GAME_STATE.GAME_OVER) {
                 gameState = GAME_STATE.TITLE;
+            } else if (gameState === GAME_STATE.ENDING) {
+                gameState = GAME_STATE.TITLE;
             }
         }
     }
@@ -113,6 +116,9 @@ function draw() {
         case GAME_STATE.PAUSED:
             drawGame();
             drawPaused();
+            break;
+        case GAME_STATE.ENDING:
+            drawEnding();
             break;
     }
 
@@ -517,6 +523,54 @@ function drawGameOver() {
     fill(200);
     textSize(14);
     text('Press SPACE or ENTER to Restart', width / 2, height / 2 + 80);
+    pop();
+}
+
+function drawEnding() {
+    // Starfield background (keep animating)
+    drawBackground();
+
+    push();
+    // Dark overlay
+    fill(0, 0, 0, 230);
+    rect(0, 0, width, height);
+
+    // Congratulations message
+    fill(255, 200, 0);
+    textSize(48);
+    textAlign(CENTER, CENTER);
+    text('CONGRATULATIONS!', width / 2, height / 4);
+
+    fill(100, 255, 255);
+    textSize(32);
+    text('ALL AREAS CLEARED', width / 2, height / 4 + 60);
+
+    // Final stats
+    fill(255);
+    textSize(24);
+    text(`Final Score: ${score}`, width / 2, height / 2);
+
+    if (score > highScore) {
+        fill(255, 255, 100);
+        textSize(20);
+        text('NEW HIGH SCORE!', width / 2, height / 2 + 40);
+    }
+
+    // Credits
+    fill(200, 200, 255);
+    textSize(16);
+    text('Thank you for playing!', width / 2, height / 2 + 100);
+
+    fill(150, 150, 200);
+    textSize(12);
+    text('Inspired by ZANAC (1986) - Compile', width / 2, height / 2 + 130);
+    text('ZNK - A fan-made tribute', width / 2, height / 2 + 150);
+
+    // Restart instruction
+    fill(255);
+    textSize(14);
+    text('Press SPACE or ENTER to Return to Title', width / 2, height - 60);
+
     pop();
 }
 
