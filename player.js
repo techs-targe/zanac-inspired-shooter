@@ -3,7 +3,7 @@ class Player {
         this.x = GAME_WIDTH / 2;
         this.y = GAME_HEIGHT - 80;
         this.size = 12; // Visual size (displayed)
-        this.hitboxSize = 9; // Collision size (25% smaller than visual)
+        this.hitboxSize = 7.7; // Collision size (36% smaller: 9 × 0.85 = 7.65 ≈ 7.7)
         this.speed = 4;
         this.lives = 3;
         this.alive = true;

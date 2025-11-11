@@ -122,7 +122,9 @@ class InputManager {
 
             // Check pause button
             if (this.isInsideButton(x, y, this.touchButtons.pauseBtn)) {
-                console.log(`  → Pause button pressed`);
+                console.log(`  → Pause button pressed at (${x.toFixed(0)}, ${y.toFixed(0)})`);
+                console.log(`     Button position: (${this.touchButtons.pauseBtn.x.toFixed(0)}, ${this.touchButtons.pauseBtn.y.toFixed(0)})`);
+                console.log(`     Button size: ${this.touchButtons.pauseBtn.size}`);
                 this.activeTouches.pause = touch.identifier;
                 this.pauseHoldTime = 0; // Start tracking hold time
                 continue; // Skip other checks for this touch
@@ -389,19 +391,20 @@ class InputManager {
         // Update button positions based on current canvas size
         // Called every frame to ensure positions match display
 
-        // All action buttons - 30px up from bottom
-        const buttonY = height - 30;
+        // All action buttons - 40px up from bottom (more space)
+        const buttonY = height - 40;
 
-        // Pause button at bottom center + shift right by 10 - shift left by 5
-        this.touchButtons.pauseBtn.x = width / 2 + 10 - 5;
+        // Pause button at center bottom (simple, no complex calculation)
+        this.touchButtons.pauseBtn.x = width / 2;
         this.touchButtons.pauseBtn.y = buttonY;
 
-        // A button (main fire, red) - at right edge + shift right by 20 - shift left by 5
-        this.touchButtons.buttonA.x = width - this.touchButtons.buttonA.size - 10 + 20 - 5;
+        // A button (main fire, red) - at right edge with proper margin
+        this.touchButtons.buttonA.x = width - this.touchButtons.buttonA.size - 15;
         this.touchButtons.buttonA.y = buttonY;
 
-        // B button (sub fire, blue) - right side, left of A + shift right by 20 - shift left by 5
-        this.touchButtons.buttonB.x = width - this.touchButtons.buttonA.size * 2 - this.touchButtons.buttonB.size - 20 + 20 - 5;
+        // B button (sub fire, blue) - left of A button with gap
+        const gap = 20; // Gap between B and A
+        this.touchButtons.buttonB.x = this.touchButtons.buttonA.x - this.touchButtons.buttonA.size - this.touchButtons.buttonB.size - gap;
         this.touchButtons.buttonB.y = buttonY;
     }
 

@@ -487,8 +487,9 @@ class Enemy {
         // Helper function to get adjusted speed based on bullet type
         const getAdjustedSpeed = (bulletType, isTakuwashi = false) => {
             if (isTakuwashi) return baseSpeed * 1.5; // Takuwashi keeps original speed
-            if (bulletType === 'lead') return baseSpeed * 0.33; // Lead: 1/3 speed
-            if (bulletType === 'sig') return baseSpeed * 0.5; // Sig: 1/2 speed
+            // Further 30% reduction: multiply by 0.7
+            if (bulletType === 'lead') return baseSpeed * 0.33 * 0.7; // Lead: 23% of base
+            if (bulletType === 'sig') return baseSpeed * 0.5 * 0.7; // Sig: 35% of base
             return baseSpeed; // Normal bullets unchanged
         };
 
@@ -966,8 +967,8 @@ class GroundEnemy {
 
         // Aim towards player
         let baseSpeed = 3.75; // Reduced from 5 to 3.75 (75% speed)
-        // Adjust speed for sig bullets (1/2 speed)
-        let speed = baseSpeed * 0.5;
+        // Adjust speed for sig bullets (1/2 speed × 0.7 = 35% of base)
+        let speed = baseSpeed * 0.5 * 0.7;
         let vx = cos(this.angle) * speed;
         let vy = sin(this.angle) * speed;
 
@@ -1270,8 +1271,9 @@ class BossEnemy {
         // Helper function to get adjusted speed based on bullet type
         const getSpeed = (bulletType, multiplier = 1.0) => {
             let typeMultiplier = 1.0;
-            if (bulletType === 'lead') typeMultiplier = 0.33; // Lead: 1/3 speed
-            else if (bulletType === 'sig') typeMultiplier = 0.5; // Sig: 1/2 speed
+            // Further 30% reduction: multiply by 0.7
+            if (bulletType === 'lead') typeMultiplier = 0.33 * 0.7; // Lead: 23% of base
+            else if (bulletType === 'sig') typeMultiplier = 0.5 * 0.7; // Sig: 35% of base
             return baseSpeed * typeMultiplier * multiplier;
         };
 
