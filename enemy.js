@@ -1930,10 +1930,9 @@ class PowerBox {
     }
 
     hit(damage) {
-        // Mark formation as touched when any box is hit
-        if (this.formation) {
-            this.formation.touched = true;
-        }
+        // DON'T mark formation as touched when hit by bullets
+        // This allows player to continue trying body collision on remaining boxes
+        // If this box has PowerChip, it will drop normally via onDestroyed()
 
         this.hp -= damage;
         if (this.hp <= 0) {

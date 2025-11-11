@@ -168,8 +168,8 @@ class Player {
         // Mark that main weapon was used (for Crow bonus)
         this.hasUsedMainWeapon = true;
 
-        // Level 30: Ultra-thin laser beam with high power
-        if (this.mainWeaponLevel === 30) {
+        // Level 30 + Sub weapon 0: Ultra-thin laser beam with high power
+        if (this.mainWeaponLevel === 30 && this.subWeaponType === 0) {
             // Create a special thin laser bullet
             let laserBullet = new PenetratingBullet(this.x, this.y - this.size, 0, -15, 2, 8);
             laserBullet.isLaserBeam = true; // Special flag for laser rendering
@@ -557,6 +557,27 @@ class Player {
 
     hit() {
         if (this.invulnerable || this.respawning) return;
+
+        // Special case: Main weapon Lv30 + Sub weapon NOT 0
+        // Instead of losing life, downgrade to Lv1 and grant 5 seconds invincibility
+        if (this.mainWeaponLevel === 30 && this.subWeaponType !== 0) {
+            // Downgrade main weapon to Lv1
+            this.mainWeaponLevel = 1;
+
+            // Grant 5 seconds invincibility (300 frames at 60fps)
+            this.invulnerable = true;
+            this.invulnerableTime = 300;
+
+            // Visual feedback: golden explosion (different from normal death)
+            createExplosion(this.x, this.y, this.size * 2);
+            for (let i = 0; i < 30; i++) {
+                particles.push(new Particle(this.x, this.y, 15, color(255, 200, 0)));
+            }
+
+            console.log(`LV30 SHIELD ACTIVATED! Downgraded to Lv1, 5 seconds invincibility`);
+
+            return; // Don't lose life
+        }
 
         this.lives--;
         if (this.lives <= 0) {
