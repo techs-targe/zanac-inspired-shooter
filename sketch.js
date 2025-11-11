@@ -848,7 +848,10 @@ function checkCollisions() {
             }
         }
 
-        // Ground enemies vs player (collision) - AI-AI and Supply Bases don't damage player
+        // Ground enemies vs player (collision) - DISABLED
+        // Ground enemies are ground-based, so player can pass over them without taking damage
+        // They can only damage player with their bullets
+        /*
         for (let i = groundEnemies.length - 1; i >= 0; i--) {
             let d = dist(player.x, player.y, groundEnemies[i].x, groundEnemies[i].y);
             if (d < player.hitboxSize + groundEnemies[i].size) {
@@ -862,6 +865,7 @@ function checkCollisions() {
                 }
             }
         }
+        */
     }
 
     // PowerBox vs player (special collision handling)
