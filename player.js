@@ -330,9 +330,12 @@ class Player {
     }
 
     shootWeapon4() {
-        // Vibrating shot - only one bullet at a time
-        let existingBullet = bullets.find(b => b instanceof VibratingBullet);
-        if (existingBullet) return; // Can't fire until current bullet is destroyed
+        // Vibrating shot - can re-fire to reposition, removes old bullet
+        let existingBulletIndex = bullets.findIndex(b => b instanceof VibratingBullet);
+        if (existingBulletIndex !== -1) {
+            // Remove existing bullet before firing new one
+            bullets.splice(existingBulletIndex, 1);
+        }
 
         let size = 8 + this.subWeaponLevel * 4;
         bullets.push(new VibratingBullet(this.x, this.y - this.size, size, this.subWeaponDurability));
@@ -367,7 +370,8 @@ class Player {
         let existingPlasma = bullets.find(b => b instanceof PlasmaBullet && b.isPlayerBullet);
         if (existingPlasma) return false; // Can't fire until current bullet is off screen
 
-        bullets.push(new PlasmaBullet(this.x, this.y - this.size, 0, -2)); // Super slow speed
+        // Pass level to PlasmaBullet constructor
+        bullets.push(new PlasmaBullet(this.x, this.y - this.size, 0, -2, this.subWeaponLevel)); // Super slow speed
         return true; // Bullet fired successfully
     }
 

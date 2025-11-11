@@ -615,23 +615,33 @@ class StraightLaserBullet extends Bullet {
 
 // Plasma bullet (weapon 6) - damages all non-ground, non-boss enemies on contact
 class PlasmaBullet extends Bullet {
-    constructor(x, y, vx, vy) {
+    constructor(x, y, vx, vy, level = 0) {
         super(x, y, vx, vy, true, 3, 12); // Damage on contact
         this.penetrating = false; // Disappears on hit
         this.hasTriggered = false; // Track if AoE damage has been triggered
+        this.level = level; // Store weapon level
+        this.instantTrigger = (level >= 5); // Level 5+: trigger immediately on spawn
     }
 
     update() {
+        // Level 5+: Instant trigger on first frame
+        if (this.instantTrigger && !this.hasTriggered) {
+            this.clearAllEnemyBullets();
+            this.damageAllEnemies();
+            this.shouldRemove = true;
+            return;
+        }
+
         super.update();
 
-        // Check collision with enemy bullets - clear ALL enemy bullets and damage all air enemies
+        // Check collision with enemy bullets - clear ALL enemy bullets and damage all enemies
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             let d = dist(this.x, this.y, enemyBullets[i].x, enemyBullets[i].y);
             if (d < this.size + enemyBullets[i].size) {
                 // Clear ALL enemy bullets from screen
                 this.clearAllEnemyBullets();
-                // Trigger AoE damage to all air enemies
-                this.damageAllAirEnemies();
+                // Trigger AoE damage to all enemies
+                this.damageAllEnemies();
                 // Mark this bullet for removal
                 this.shouldRemove = true;
                 return;
@@ -644,27 +654,48 @@ class PlasmaBullet extends Bullet {
         enemyBullets.length = 0;
     }
 
-    damageAllAirEnemies() {
+    damageAllEnemies() {
         // Prevent multiple triggers
         if (this.hasTriggered) return;
         this.hasTriggered = true;
 
-        // Damage all non-ground, non-boss enemies on screen
+        // Damage all air enemies
         for (let i = enemies.length - 1; i >= 0; i--) {
             if (enemies[i] && !enemies[i].isBoss && !enemies[i].markedForDeletion) {
                 enemies[i].hp -= 5; // Decent damage to all air enemies
                 if (enemies[i].hp < 0) enemies[i].hp = 0;
             }
         }
+
+        // Level 3+: Also damage ground enemies
+        if (this.level >= 3 && typeof groundEnemies !== 'undefined') {
+            for (let i = groundEnemies.length - 1; i >= 0; i--) {
+                if (groundEnemies[i] && !groundEnemies[i].isBoss) {
+                    groundEnemies[i].hp -= 5; // Same damage to ground enemies
+                    if (groundEnemies[i].hp < 0) groundEnemies[i].hp = 0;
+                }
+            }
+        }
+    }
+
+    // Legacy method name for compatibility
+    damageAllAirEnemies() {
+        this.damageAllEnemies();
     }
 
     hits(target) {
-        // Only hit non-ground, non-boss enemies
-        if (target.isGround || target.isBoss) {
-            return false; // Don't hit ground enemies or bosses
+        // Don't hit bosses
+        if (target.isBoss) {
+            return false;
         }
 
-        // Normal hit detection for air enemies
+        // Level 0-2: Only hit air enemies
+        // Level 3+: Hit both air and ground enemies
+        if (target.isGround && this.level < 3) {
+            return false; // Don't hit ground enemies at low levels
+        }
+
+        // Normal hit detection
         let d = dist(this.x, this.y, target.x, target.y);
         let targetSize = target.hitboxSize !== undefined ? target.hitboxSize : target.size;
         let doesHit = d < this.size + targetSize;
@@ -672,7 +703,7 @@ class PlasmaBullet extends Bullet {
         // If hitting an enemy, trigger AoE damage and clear all enemy bullets
         if (doesHit && !this.hasTriggered) {
             this.clearAllEnemyBullets();
-            this.damageAllAirEnemies();
+            this.damageAllEnemies();
         }
 
         return doesHit;

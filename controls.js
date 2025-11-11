@@ -12,6 +12,11 @@ class InputManager {
         this.subFire = false;
         this.pause = false;
 
+        // Dual fire mode for mobile (P long press toggles)
+        this.dualFireMode = false;
+        this.pauseHoldTime = 0;
+        this.pauseHoldThreshold = 45; // frames (~0.75 seconds at 60fps)
+
         // Touch control state (size = RADIUS for all buttons)
         this.touchButtons = {
             buttonA: { x: 0, y: 0, size: 40 },  // Main fire (radius 40, diameter 80)
@@ -118,8 +123,8 @@ class InputManager {
             // Check pause button
             if (this.isInsideButton(x, y, this.touchButtons.pauseBtn)) {
                 console.log(`  → Pause button pressed`);
-                this.pause = true;
                 this.activeTouches.pause = touch.identifier;
+                this.pauseHoldTime = 0; // Start tracking hold time
                 continue; // Skip other checks for this touch
             }
 
@@ -216,7 +221,16 @@ class InputManager {
 
             // Release pause
             if (this.activeTouches.pause === id) {
-                this.pause = false;
+                // Check if it was a long press (toggle dual fire mode) or short press (pause)
+                if (this.pauseHoldTime >= this.pauseHoldThreshold) {
+                    // Long press: toggle dual fire mode
+                    this.dualFireMode = !this.dualFireMode;
+                    console.log(`Dual Fire Mode: ${this.dualFireMode ? 'ON' : 'OFF'}`);
+                } else {
+                    // Short press: trigger pause
+                    this.pause = true;
+                }
+                this.pauseHoldTime = 0;
                 this.activeTouches.pause = null;
             }
         }
@@ -233,6 +247,11 @@ class InputManager {
     }
 
     update() {
+        // Track pause button hold time for dual fire mode toggle
+        if (this.activeTouches.pause !== null) {
+            this.pauseHoldTime++;
+        }
+
         // Update keyboard input (this maintains backward compatibility)
         this.updateKeyboard();
 
@@ -308,6 +327,14 @@ class InputManager {
         // Restore fire button states
         if (this.activeTouches.mainFire !== null) this.mainFire = true;
         if (this.activeTouches.subFire !== null) this.subFire = true;
+
+        // Dual fire mode: if either button is pressed, both fire
+        if (this.dualFireMode && this.isMobile) {
+            if (this.activeTouches.mainFire !== null || this.activeTouches.subFire !== null) {
+                this.mainFire = true;
+                this.subFire = true;
+            }
+        }
     }
 
     isGamepadLeft() {
@@ -413,9 +440,13 @@ class InputManager {
         textSize(20);
         text('B', btnB.x, btnB.y);
 
-        // Pause button
+        // Pause button (glows green if dual fire mode is active)
         const pauseBtn = this.touchButtons.pauseBtn;
-        fill(200, 200, 100, this.pause ? 120 : 50);
+        if (this.dualFireMode) {
+            fill(100, 255, 100, this.pause ? 120 : 50); // Green when dual fire mode on
+        } else {
+            fill(200, 200, 100, this.pause ? 120 : 50); // Yellow normally
+        }
         stroke(255, 255, 255, 100);
         strokeWeight(2);
         ellipse(pauseBtn.x, pauseBtn.y, pauseBtn.size * 2, pauseBtn.size * 2);
@@ -424,6 +455,15 @@ class InputManager {
         textAlign(CENTER, CENTER);
         textSize(12);
         text('P', pauseBtn.x, pauseBtn.y);
+
+        // Dual fire mode indicator
+        if (this.dualFireMode) {
+            fill(100, 255, 100, 150);
+            noStroke();
+            textAlign(CENTER, CENTER);
+            textSize(14);
+            text('DUAL', pauseBtn.x, pauseBtn.y - pauseBtn.size - 15);
+        }
 
         pop();
     }
