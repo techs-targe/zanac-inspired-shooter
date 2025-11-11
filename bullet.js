@@ -261,6 +261,7 @@ class VibratingBullet extends Bullet {
         super(x, y, 0, -6, true, 2, size);
         this.durability = durability;
         this.maxDurability = durability;
+        this.baseSize = size; // Store original size
         this.vibrationSpeed = 0.15;
         this.vibrationAmount = 50; // Increased from 25 to 50 for larger horizontal range
         this.time = 0;
@@ -269,6 +270,12 @@ class VibratingBullet extends Bullet {
         this.startY = y;
         this.centerX = x; // Store center position for oscillation
         this.penetrating = true;
+    }
+
+    getCurrentSize() {
+        // Size scales with durability (minimum 30% of original size)
+        let ratio = this.durability / this.maxDurability;
+        return this.baseSize * Math.max(0.3, ratio);
     }
 
     update() {
@@ -295,7 +302,14 @@ class VibratingBullet extends Bullet {
             // Oscillate in place
             this.x = this.centerX + sin(this.time) * this.vibrationAmount;
             // Y position stays the same
+
+            // Reduce durability while oscillating (moving left/right)
+            this.durability -= 0.5; // Decrease durability per frame
+            if (this.durability < 0) this.durability = 0;
         }
+
+        // Update size based on durability
+        this.size = this.getCurrentSize();
 
         // Check collision with enemy bullets (blocks bullets from air enemies)
         // Weapon 4 CANNOT destroy LEAD bullets
@@ -385,6 +399,10 @@ class VibratingBullet extends Bullet {
     }
 
     isOffscreen() {
+        // Remove if durability depleted
+        if (this.durability <= 0) {
+            return true;
+        }
         // Remove if deflected and offscreen
         if (this.state === 'deflected') {
             return (
@@ -394,7 +412,7 @@ class VibratingBullet extends Bullet {
                 this.y > GAME_HEIGHT + 50
             );
         }
-        // Don't remove while oscillating
+        // Don't remove while oscillating (unless durability is 0)
         if (this.state === 'oscillating') {
             return false;
         }

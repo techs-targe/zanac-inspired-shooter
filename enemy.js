@@ -1978,18 +1978,18 @@ class PowerBox {
                     player.invulnerable = true;
                     player.invulnerableTime = 120; // 2 seconds
 
-                    // Mark formation as touched
+                    // Mark formation as touched (gamble ends on WIN)
                     this.formation.touched = true;
                 } else {
                     // LOSE! Wrong box hit - take damage unless invulnerable
-                    console.log(`POWERBOX LOSE! Wrong box hit.`);
+                    console.log(`POWERBOX MISS! Wrong box - try another one.`);
 
                     if (!player.invulnerable) {
                         player.hit();
                     }
 
-                    // Mark formation as touched (gamble is over)
-                    this.formation.touched = true;
+                    // DON'T mark formation as touched - player can try another box
+                    // this.formation.touched = true; // REMOVED - gamble continues!
                 }
             } else {
                 // Already attacked formation OR no formation - normal collision
