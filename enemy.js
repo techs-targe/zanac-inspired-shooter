@@ -482,16 +482,25 @@ class Enemy {
         let dx = player.x - this.x;
         let dy = player.y - this.y;
         let angle = atan2(dy, dx);
-        let speed = 3; // Reduced from 4 to 3 (75% speed)
+        let baseSpeed = 3; // Base speed
+
+        // Helper function to get adjusted speed based on bullet type
+        const getAdjustedSpeed = (bulletType, isTakuwashi = false) => {
+            if (isTakuwashi) return baseSpeed * 1.5; // Takuwashi keeps original speed
+            if (bulletType === 'lead') return baseSpeed * 0.33; // Lead: 1/3 speed
+            if (bulletType === 'sig') return baseSpeed * 0.5; // Sig: 1/2 speed
+            return baseSpeed; // Normal bullets unchanged
+        };
 
         switch(this.type) {
             case 'shooter':
                 // Single aimed shot
+                let shooterSpeed = getAdjustedSpeed('sig');
                 enemyBullets.push(new Bullet(
                     this.x,
                     this.y,
-                    cos(angle) * speed,
-                    sin(angle) * speed,
+                    cos(angle) * shooterSpeed,
+                    sin(angle) * shooterSpeed,
                     false,
                     1,
                     4,
@@ -501,13 +510,14 @@ class Enemy {
 
             case 'tank':
                 // Triple shot spread
+                let tankSpeed = getAdjustedSpeed('sig');
                 for (let i = -1; i <= 1; i++) {
                     let spreadAngle = angle + i * 0.3;
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
-                        cos(spreadAngle) * speed,
-                        sin(spreadAngle) * speed,
+                        cos(spreadAngle) * tankSpeed,
+                        sin(spreadAngle) * tankSpeed,
                         false,
                         1,
                         4,
@@ -519,11 +529,12 @@ class Enemy {
             case 'spiral':
                 // Rotating shot - now fires LEAD bullets
                 let spiralAngle = this.angle;
+                let spiralSpeed = getAdjustedSpeed('lead');
                 enemyBullets.push(new Bullet(
                     this.x,
                     this.y,
-                    cos(spiralAngle) * speed,
-                    sin(spiralAngle) * speed,
+                    cos(spiralAngle) * spiralSpeed,
+                    sin(spiralAngle) * spiralSpeed,
                     false,
                     1,
                     5,
@@ -538,11 +549,12 @@ class Enemy {
                     // Outer 2 bullets (i=0, i=4) are LEAD, center 3 (i=1,2,3) are SIG
                     let bulletType = (i === 0 || i === 4) ? 'lead' : 'sig';
                     let bulletSize = bulletType === 'lead' ? 5 : 4;
+                    let bombSpeed = getAdjustedSpeed(bulletType);
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
-                        cos(bombAngle) * speed,
-                        sin(bombAngle) * speed,
+                        cos(bombAngle) * bombSpeed,
+                        sin(bombAngle) * bombSpeed,
                         false,
                         1,
                         bulletSize,
@@ -555,11 +567,12 @@ class Enemy {
                 // Aimed shot - alternates between SIG and LEAD
                 let trackerBulletType = (frameCount % 4 < 2) ? 'sig' : 'lead';
                 let trackerBulletSize = trackerBulletType === 'lead' ? 5 : 4;
+                let trackerSpeed = getAdjustedSpeed(trackerBulletType);
                 enemyBullets.push(new Bullet(
                     this.x,
                     this.y,
-                    cos(angle) * speed,
-                    sin(angle) * speed,
+                    cos(angle) * trackerSpeed,
+                    sin(angle) * trackerSpeed,
                     false,
                     1,
                     trackerBulletSize,
@@ -569,13 +582,14 @@ class Enemy {
 
             case 'divider':
                 // Double shot
+                let dividerSpeed = getAdjustedSpeed('sig');
                 for (let i = -1; i <= 1; i += 2) {
                     let spreadAngle = angle + i * 0.2;
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
-                        cos(spreadAngle) * speed,
-                        sin(spreadAngle) * speed,
+                        cos(spreadAngle) * dividerSpeed,
+                        sin(spreadAngle) * dividerSpeed,
                         false,
                         1,
                         4,
@@ -591,11 +605,12 @@ class Enemy {
 
                 if (this.burstCounter < this.burstShots) {
                     if (this.burstDelay === 0) {
+                        let drobeSpeed = getAdjustedSpeed('sig');
                         enemyBullets.push(new Bullet(
                             this.x,
                             this.y,
-                            cos(angle) * speed,
-                            sin(angle) * speed,
+                            cos(angle) * drobeSpeed,
+                            sin(angle) * drobeSpeed,
                             false,
                             1,
                             6,
@@ -614,13 +629,14 @@ class Enemy {
             case 'yellowGogos':
                 // イエロー・ゴーゴス：リードを真下または真上の3方向
                 let verticalDir = (this.y < GAME_HEIGHT / 2) ? 1 : -1; // 上半分なら下、下半分なら上
+                let yellowSpeed = getAdjustedSpeed('lead');
                 for (let i = -1; i <= 1; i++) {
                     let vAngle = (verticalDir > 0 ? PI / 2 : -PI / 2) + i * 0.3;
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
-                        cos(vAngle) * speed,
-                        sin(vAngle) * speed,
+                        cos(vAngle) * yellowSpeed,
+                        sin(vAngle) * yellowSpeed,
                         false,
                         1,
                         5,
@@ -631,13 +647,14 @@ class Enemy {
 
             case 'blueGogos':
                 // ブルー・ゴーゴス：しだれ弾（リード）をばらまく
+                let blueSpeed = getAdjustedSpeed('lead');
                 for (let i = 0; i < 6; i++) {
                     let scatterAngle = (i / 6) * TWO_PI;
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
-                        cos(scatterAngle) * speed * 0.8,
-                        sin(scatterAngle) * speed * 0.8,
+                        cos(scatterAngle) * blueSpeed * 0.8,
+                        sin(scatterAngle) * blueSpeed * 0.8,
                         false,
                         1,
                         5,
@@ -653,11 +670,12 @@ class Enemy {
 
                 if (this.burstCounter < this.burstShots) {
                     if (this.burstDelay === 0) {
+                        let redSpeed = getAdjustedSpeed('sig');
                         enemyBullets.push(new Bullet(
                             this.x,
                             this.y,
-                            cos(angle) * speed * 1.2,
-                            sin(angle) * speed * 1.2,
+                            cos(angle) * redSpeed * 1.2,
+                            sin(angle) * redSpeed * 1.2,
                             false,
                             1,
                             6,
@@ -676,12 +694,13 @@ class Enemy {
             case 'takuwashi':
                 // タクワーシ：X軸を調整しながら常にシグを猛烈連射（16連射）
                 if (player && player.alive) {
-                    // 常に真下に向けてシグを猛烈連射
+                    // 常に真下に向けてシグを猛烈連射（速度は変更しない）
+                    let takuwashiSpeed = getAdjustedSpeed('sig', true);
                     enemyBullets.push(new Bullet(
                         this.x,
                         this.y,
                         0,
-                        speed * 1.5,
+                        takuwashiSpeed,
                         false,
                         1,
                         6,
@@ -946,7 +965,9 @@ class GroundEnemy {
         if (this.y < 0 || this.y > GAME_HEIGHT) return; // Don't shoot if offscreen
 
         // Aim towards player
-        let speed = 3.75; // Reduced from 5 to 3.75 (75% speed)
+        let baseSpeed = 3.75; // Reduced from 5 to 3.75 (75% speed)
+        // Adjust speed for sig bullets (1/2 speed)
+        let speed = baseSpeed * 0.5;
         let vx = cos(this.angle) * speed;
         let vy = sin(this.angle) * speed;
 
@@ -1246,14 +1267,23 @@ class BossEnemy {
         let baseSpeed = 4 + (this.areaNumber * 0.15); // Speed increases with area
         let playerAngle = atan2(player.y - this.y, player.x - this.x);
 
+        // Helper function to get adjusted speed based on bullet type
+        const getSpeed = (bulletType, multiplier = 1.0) => {
+            let typeMultiplier = 1.0;
+            if (bulletType === 'lead') typeMultiplier = 0.33; // Lead: 1/3 speed
+            else if (bulletType === 'sig') typeMultiplier = 0.5; // Sig: 1/2 speed
+            return baseSpeed * typeMultiplier * multiplier;
+        };
+
         // Area-specific patterns
         switch(this.areaNumber) {
             case 1: // Area 1: Simple aimed shots (beginner friendly)
                 {
+                    let speed = getSpeed('sig');
                     enemyBullets.push(new Bullet(
                         this.x, this.y + this.size / 2,
-                        cos(playerAngle) * baseSpeed,
-                        sin(playerAngle) * baseSpeed,
+                        cos(playerAngle) * speed,
+                        sin(playerAngle) * speed,
                         false, 1, 5, 'sig'
                     ));
                 }
@@ -1261,12 +1291,13 @@ class BossEnemy {
 
             case 2: // Area 2: Aimed + small 3-way spread
                 {
+                    let speed = getSpeed('sig');
                     for (let i = -1; i <= 1; i++) {
                         let angle = playerAngle + i * 0.25;
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, 'sig'
                         ));
                     }
@@ -1275,11 +1306,12 @@ class BossEnemy {
 
             case 3: // Area 3: 5-way spread + aimed shot
                 {
+                    let speed = getSpeed('sig');
                     // Aimed center shot
                     enemyBullets.push(new Bullet(
                         this.x, this.y + this.size / 2,
-                        cos(playerAngle) * baseSpeed,
-                        sin(playerAngle) * baseSpeed,
+                        cos(playerAngle) * speed,
+                        sin(playerAngle) * speed,
                         false, 1, 5, 'sig'
                     ));
                     // Spread shots
@@ -1288,8 +1320,8 @@ class BossEnemy {
                         let angle = playerAngle + i * 0.3;
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, 'sig'
                         ));
                     }
@@ -1301,10 +1333,11 @@ class BossEnemy {
                     for (let i = -3; i <= 3; i++) {
                         let angle = playerAngle + i * 0.35;
                         let bulletType = (i === -3 || i === 3) ? 'lead' : 'sig';
+                        let speed = getSpeed(bulletType);
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, bulletType
                         ));
                     }
@@ -1313,13 +1346,15 @@ class BossEnemy {
 
             case 5: // Area 5: Spread + circular (8-way)
                 {
+                    let sigSpeed = getSpeed('sig');
+                    let leadSpeed = getSpeed('lead', 0.8);
                     // Player-aimed spread
                     for (let i = -2; i <= 2; i++) {
                         let angle = playerAngle + i * 0.3;
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * sigSpeed,
+                            sin(angle) * sigSpeed,
                             false, 1, 5, 'sig'
                         ));
                     }
@@ -1329,8 +1364,8 @@ class BossEnemy {
                             let angle = (i / 8) * TWO_PI + this.angle;
                             enemyBullets.push(new Bullet(
                                 this.x, this.y,
-                                cos(angle) * (baseSpeed * 0.8),
-                                sin(angle) * (baseSpeed * 0.8),
+                                cos(angle) * leadSpeed,
+                                sin(angle) * leadSpeed,
                                 false, 1, 5, 'lead'
                             ));
                         }
@@ -1340,32 +1375,36 @@ class BossEnemy {
 
             case 6: // Area 6: Dense spread + side shots
                 {
+                    let leadSpeed = getSpeed('lead');
                     // Wide 9-way spread
                     for (let i = -4; i <= 4; i++) {
                         let angle = playerAngle + i * 0.3;
                         let bulletType = (Math.abs(i) >= 3) ? 'lead' : 'sig';
+                        let speed = getSpeed(bulletType);
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, bulletType
                         ));
                     }
                     // Side shots
-                    enemyBullets.push(new Bullet(this.x, this.y, -baseSpeed, 0, false, 1, 5, 'lead'));
-                    enemyBullets.push(new Bullet(this.x, this.y, baseSpeed, 0, false, 1, 5, 'lead'));
+                    enemyBullets.push(new Bullet(this.x, this.y, -leadSpeed, 0, false, 1, 5, 'lead'));
+                    enemyBullets.push(new Bullet(this.x, this.y, leadSpeed, 0, false, 1, 5, 'lead'));
                 }
                 break;
 
             case 7: // Area 7: Spiral + dense circular
                 {
+                    let sigSpeed = getSpeed('sig');
+                    let leadSpeed = getSpeed('lead', 0.7);
                     // Aimed shots
                     for (let i = -2; i <= 2; i++) {
                         let angle = playerAngle + i * 0.25;
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * sigSpeed,
+                            sin(angle) * sigSpeed,
                             false, 1, 5, 'sig'
                         ));
                     }
@@ -1374,8 +1413,8 @@ class BossEnemy {
                         let angle = (i / 12) * TWO_PI + this.angle * 2;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * (baseSpeed * 0.7),
-                            sin(angle) * (baseSpeed * 0.7),
+                            cos(angle) * leadSpeed,
+                            sin(angle) * leadSpeed,
                             false, 1, 5, 'lead'
                         ));
                     }
@@ -1384,14 +1423,16 @@ class BossEnemy {
 
             case 8: // Area 8: Complex multi-pattern barrage
                 {
+                    let leadSpeed = getSpeed('lead');
                     // Dense 11-way spread
                     for (let i = -5; i <= 5; i++) {
                         let angle = playerAngle + i * 0.25;
                         let bulletType = (Math.abs(i) >= 4) ? 'lead' : 'sig';
+                        let speed = getSpeed(bulletType);
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, bulletType
                         ));
                     }
@@ -1401,8 +1442,8 @@ class BossEnemy {
                             let angle = (i / 16) * TWO_PI + this.angle;
                             enemyBullets.push(new Bullet(
                                 this.x, this.y,
-                                cos(angle) * baseSpeed,
-                                sin(angle) * baseSpeed,
+                                cos(angle) * leadSpeed,
+                                sin(angle) * leadSpeed,
                                 false, 1, 5, 'lead'
                             ));
                         }
@@ -1412,13 +1453,16 @@ class BossEnemy {
 
             case 9: // Area 9: Spiral + tracking + multi-directional
                 {
+                    let sigSpeed = getSpeed('sig', 1.1);
+                    let leadSpeed1 = getSpeed('lead', 0.8);
+                    let leadSpeed2 = getSpeed('lead');
                     // Triple aimed shots
                     for (let i = -1; i <= 1; i++) {
                         let angle = playerAngle + i * 0.2;
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * (baseSpeed * 1.1),
-                            sin(angle) * (baseSpeed * 1.1),
+                            cos(angle) * sigSpeed,
+                            sin(angle) * sigSpeed,
                             false, 1, 5, 'sig'
                         ));
                     }
@@ -1427,8 +1471,8 @@ class BossEnemy {
                         let angle = (i / 16) * TWO_PI + this.angle * 1.5;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * (baseSpeed * 0.8),
-                            sin(angle) * (baseSpeed * 0.8),
+                            cos(angle) * leadSpeed1,
+                            sin(angle) * leadSpeed1,
                             false, 1, 5, 'lead'
                         ));
                     }
@@ -1437,8 +1481,8 @@ class BossEnemy {
                         let angle = (i / 4) * TWO_PI;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * leadSpeed2,
+                            sin(angle) * leadSpeed2,
                             false, 1, 5, 'lead'
                         ));
                     }
@@ -1447,14 +1491,16 @@ class BossEnemy {
 
             case 10: // Area 10: Extreme density barrage
                 {
+                    let leadSpeed = getSpeed('lead', 0.9);
                     // Wide 13-way spread
                     for (let i = -6; i <= 6; i++) {
                         let angle = playerAngle + i * 0.22;
                         let bulletType = (Math.abs(i) >= 5) ? 'lead' : 'sig';
+                        let speed = getSpeed(bulletType);
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, bulletType
                         ));
                     }
@@ -1463,8 +1509,8 @@ class BossEnemy {
                         let angle = (i / 20) * TWO_PI + this.angle;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * (baseSpeed * 0.9),
-                            sin(angle) * (baseSpeed * 0.9),
+                            cos(angle) * leadSpeed,
+                            sin(angle) * leadSpeed,
                             false, 1, 5, 'lead'
                         ));
                     }
@@ -1473,14 +1519,17 @@ class BossEnemy {
 
             case 11: // Area 11: Massive multi-pattern assault
                 {
+                    let leadSpeed1 = getSpeed('lead', 0.85);
+                    let leadSpeed2 = getSpeed('lead');
                     // Ultra-wide 15-way spread
                     for (let i = -7; i <= 7; i++) {
                         let angle = playerAngle + i * 0.2;
                         let bulletType = (Math.abs(i) >= 6) ? 'lead' : 'sig';
+                        let speed = getSpeed(bulletType);
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * speed,
+                            sin(angle) * speed,
                             false, 1, 5, bulletType
                         ));
                     }
@@ -1489,26 +1538,30 @@ class BossEnemy {
                         let angle = (i / 24) * TWO_PI + this.angle * 2;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * (baseSpeed * 0.85),
-                            sin(angle) * (baseSpeed * 0.85),
+                            cos(angle) * leadSpeed1,
+                            sin(angle) * leadSpeed1,
                             false, 1, 5, 'lead'
                         ));
                     }
                     // Side barrages
                     for (let i = 0; i < 3; i++) {
-                        enemyBullets.push(new Bullet(this.x, this.y, -baseSpeed, i * 0.5, false, 1, 5, 'lead'));
-                        enemyBullets.push(new Bullet(this.x, this.y, baseSpeed, i * 0.5, false, 1, 5, 'lead'));
+                        enemyBullets.push(new Bullet(this.x, this.y, -leadSpeed2, i * 0.5, false, 1, 5, 'lead'));
+                        enemyBullets.push(new Bullet(this.x, this.y, leadSpeed2, i * 0.5, false, 1, 5, 'lead'));
                     }
                 }
                 break;
 
             case 12: // Area 12: FINAL BOSS - Ultimate barrage
                 {
+                    let leadSpeed1 = getSpeed('lead', 0.8);
+                    let leadSpeed2 = getSpeed('lead');
+                    let sigSpeed = getSpeed('sig', 1.2);
                     // Maximum 17-way spread
                     for (let i = -8; i <= 8; i++) {
                         let angle = playerAngle + i * 0.18;
                         let bulletType = (Math.abs(i) >= 6) ? 'lead' : 'sig';
-                        let speed = baseSpeed * (Math.abs(i) % 2 === 0 ? 1.1 : 0.9);
+                        let multiplier = (Math.abs(i) % 2 === 0 ? 1.1 : 0.9);
+                        let speed = getSpeed(bulletType, multiplier);
                         enemyBullets.push(new Bullet(
                             this.x, this.y + this.size / 2,
                             cos(angle) * speed,
@@ -1521,8 +1574,8 @@ class BossEnemy {
                         let angle = (i / 32) * TWO_PI + this.angle * 2.5;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * (baseSpeed * 0.8),
-                            sin(angle) * (baseSpeed * 0.8),
+                            cos(angle) * leadSpeed1,
+                            sin(angle) * leadSpeed1,
                             false, 1, 5, 'lead'
                         ));
                     }
@@ -1531,8 +1584,8 @@ class BossEnemy {
                         let angle = (i / 24) * TWO_PI - this.angle;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * baseSpeed,
-                            sin(angle) * baseSpeed,
+                            cos(angle) * leadSpeed2,
+                            sin(angle) * leadSpeed2,
                             false, 1, 5, 'lead'
                         ));
                     }
@@ -1541,8 +1594,8 @@ class BossEnemy {
                         let angle = (i / 8) * TWO_PI;
                         enemyBullets.push(new Bullet(
                             this.x, this.y,
-                            cos(angle) * (baseSpeed * 1.2),
-                            sin(angle) * (baseSpeed * 1.2),
+                            cos(angle) * sigSpeed,
+                            sin(angle) * sigSpeed,
                             false, 1, 5, 'sig'
                         ));
                     }
@@ -1651,7 +1704,7 @@ class SpecialAIAI {
         this.isGround = true;
         this.isSpecial = true; // Flag to identify as AI-AI
         this.canShoot = false;
-        this.scrollSpeed = 0.15; // Very slow movement (reduced to 1/2)
+        this.scrollSpeed = 0.075; // Very slow movement (reduced to 1/2 again)
         this.angle = 0; // For animation
 
         // Color scheme - make it look special

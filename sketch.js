@@ -839,7 +839,7 @@ function checkCollisions() {
         // Enemies vs player (collision)
         for (let i = enemies.length - 1; i >= 0; i--) {
             let d = dist(player.x, player.y, enemies[i].x, enemies[i].y);
-            if (d < player.size + enemies[i].size) {
+            if (d < player.hitboxSize + enemies[i].size) {
                 createExplosion(enemies[i].x, enemies[i].y, enemies[i].size);
                 enemies[i].onDestroyed();
                 enemies.splice(i, 1);
@@ -851,7 +851,7 @@ function checkCollisions() {
         // Ground enemies vs player (collision) - AI-AI and Supply Bases don't damage player
         for (let i = groundEnemies.length - 1; i >= 0; i--) {
             let d = dist(player.x, player.y, groundEnemies[i].x, groundEnemies[i].y);
-            if (d < player.size + groundEnemies[i].size) {
+            if (d < player.hitboxSize + groundEnemies[i].size) {
                 // AI-AI and Supply Bases don't damage player on contact
                 if (!groundEnemies[i].isSpecial && !groundEnemies[i].isSupplyBase) {
                     createExplosion(groundEnemies[i].x, groundEnemies[i].y, groundEnemies[i].size);
@@ -884,7 +884,7 @@ function checkCollisions() {
     if (player.alive) {
         for (let i = powerUps.length - 1; i >= 0; i--) {
             let d = dist(player.x, player.y, powerUps[i].x, powerUps[i].y);
-            if (d < player.size + powerUps[i].size) {
+            if (d < player.hitboxSize + powerUps[i].size) {
                 // Check type
                 if (powerUps[i].type === 'powerchip' || powerUps[i] instanceof PowerChip) {
                     player.collectPowerChip();

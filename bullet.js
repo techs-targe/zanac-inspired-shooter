@@ -163,7 +163,8 @@ class Bullet {
 
     hits(target) {
         let d = dist(this.x, this.y, target.x, target.y);
-        return d < this.size + target.size;
+        let targetSize = target.hitboxSize !== undefined ? target.hitboxSize : target.size;
+        return d < this.size + targetSize;
     }
 
     deflectFromBoss() {
@@ -505,7 +506,8 @@ class BoomerangBullet extends Bullet {
     hits(target) {
         // Standard collision detection
         let d = dist(this.x, this.y, target.x, target.y);
-        return d < this.size + target.size;
+        let targetSize = target.hitboxSize !== undefined ? target.hitboxSize : target.size;
+        return d < this.size + targetSize;
     }
 
     deflectFromBoss() {
@@ -606,7 +608,8 @@ class StraightLaserBullet extends Bullet {
     hits(target) {
         // Extended hitbox for laser length
         let d = dist(this.x, this.y, target.x, target.y);
-        return d < this.size + target.size + this.laserLength / 2;
+        let targetSize = target.hitboxSize !== undefined ? target.hitboxSize : target.size;
+        return d < this.size + targetSize + this.laserLength / 2;
     }
 }
 
@@ -663,7 +666,8 @@ class PlasmaBullet extends Bullet {
 
         // Normal hit detection for air enemies
         let d = dist(this.x, this.y, target.x, target.y);
-        let doesHit = d < this.size + target.size;
+        let targetSize = target.hitboxSize !== undefined ? target.hitboxSize : target.size;
+        let doesHit = d < this.size + targetSize;
 
         // If hitting an enemy, trigger AoE damage and clear all enemy bullets
         if (doesHit && !this.hasTriggered) {
@@ -758,7 +762,8 @@ class BarrierWeapon {
     }
 
     update() {
-        this.angle += 0.05;
+        // Fixed barrier - no rotation
+        // this.angle += 0.05;
 
         // Time-based durability decay: 1 per 0.5 seconds (30 frames)
         this.timeDecayCounter++;
@@ -943,39 +948,39 @@ class RotatingWeapon {
         switch(level) {
             case 0:
             case 1:
-                // LV1: Single bullet
+                // LV1: Single bullet (speed +30%)
                 return {
                     numBullets: 1,
                     radius: 50,
-                    rotationSpeed: 0.15
+                    rotationSpeed: 0.195  // 0.15 * 1.3
                 };
             case 2:
-                // LV2: 2 bullets (double)
+                // LV2: 2 bullets (double) (speed +30%)
                 return {
                     numBullets: 2,
                     radius: 50,
-                    rotationSpeed: 0.15
+                    rotationSpeed: 0.195  // 0.15 * 1.3
                 };
             case 3:
-                // LV3: 2 bullets wide
+                // LV3: 2 bullets wide (speed +30%)
                 return {
                     numBullets: 2,
                     radius: 70,  // Wider radius
-                    rotationSpeed: 0.15
+                    rotationSpeed: 0.195  // 0.15 * 1.3
                 };
             case 4:
-                // LV4: 2 bullets wide + faster rotation
+                // LV4: 2 bullets wide + faster rotation (speed +30%)
                 return {
                     numBullets: 2,
                     radius: 70,
-                    rotationSpeed: 0.22  // Faster rotation
+                    rotationSpeed: 0.286  // 0.22 * 1.3
                 };
             default:
-                // LV5+: 3 bullets wide + same speed as LV4
+                // LV5+: 3 bullets wide + 2× speed
                 return {
                     numBullets: 3,
                     radius: 70,
-                    rotationSpeed: 0.22  // Same as LV4
+                    rotationSpeed: 0.44  // 0.22 * 2 (double the base LV4 speed)
                 };
         }
     }

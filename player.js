@@ -2,7 +2,8 @@ class Player {
     constructor() {
         this.x = GAME_WIDTH / 2;
         this.y = GAME_HEIGHT - 80;
-        this.size = 12;
+        this.size = 12; // Visual size (displayed)
+        this.hitboxSize = 9; // Collision size (25% smaller than visual)
         this.speed = 4;
         this.lives = 3;
         this.alive = true;
@@ -297,8 +298,8 @@ class Player {
         let existingPenetrating = bullets.find(b => b instanceof PenetratingBullet && b.isPlayerBullet);
         if (existingPenetrating) return false; // Can't fire until current bullet is off screen
 
-        // Slower speed
-        let speed = 4 + this.subWeaponLevel;
+        // Speed increased by 30%
+        let speed = (4 + this.subWeaponLevel) * 1.3;
         if (this.subWeaponLevel === 0) {
             bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -speed, 8));
         } else if (this.subWeaponLevel === 1) {
