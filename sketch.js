@@ -203,6 +203,19 @@ function updateGame() {
             }
         }
 
+        // Debug mode: Spawn sub weapon items
+        if (debugMode && frameCount % 180 === 0) {
+            // Spawn all 8 sub weapons (0-7) across the screen
+            for (let i = 0; i < 8; i++) {
+                let x = 60 + i * 50; // Spread across screen
+                try {
+                    powerUps.push(new SubWeapon(x, -20, i));
+                } catch (e) {
+                    console.error("Error spawning debug item:", e);
+                }
+            }
+        }
+
         // Update bullets
         for (let i = bullets.length - 1; i >= 0; i--) {
             if (bullets[i]) {
@@ -462,8 +475,11 @@ function drawHUD() {
     if (debugMode) {
         textAlign(LEFT, TOP);
         fill(255, 255, 0);
+        textSize(14);
+        text('DEBUG MODE', 10, 120);
+
         textSize(10);
-        let debugY = 120;
+        let debugY = 138;
         text(`Area: ${areaManager.currentArea}`, 10, debugY);
         text(`Progress: ${areaManager.areaProgress}`, 10, debugY + 12);
         text(`Enemies: ${enemies.length}`, 10, debugY + 24);
@@ -1082,6 +1098,12 @@ function keyPressed() {
         if (dKeyPressCount >= 3) {
             debugMode = !debugMode;
             dKeyPressCount = 0;
+
+            // When debug mode is activated
+            if (debugMode && player) {
+                player.lives = 30; // Set lives to 30
+                console.log('DEBUG MODE ACTIVATED: Lives set to 30');
+            }
         }
     }
 }
