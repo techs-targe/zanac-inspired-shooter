@@ -36,7 +36,10 @@ let extraLifeInterval = 10000; // 10,000 points interval until 100,000
 let mainFirePressed = false;
 let subFirePressed = false;
 
-// Debug mode removed for production
+let debugMode = false;
+let dKeyPressCount = 0;
+let dKeyPressTimer = 0;
+let endingStartTime = 0;
 
 function setup() {
     let canvas = createCanvas(GAME_WIDTH, GAME_HEIGHT);
@@ -92,7 +95,11 @@ function draw() {
             } else if (gameState === GAME_STATE.GAME_OVER) {
                 gameState = GAME_STATE.TITLE;
             } else if (gameState === GAME_STATE.ENDING) {
-                gameState = GAME_STATE.TITLE;
+                // Only allow exit after 3 minutes
+                let elapsedTime = millis() - endingStartTime;
+                if (elapsedTime >= 180000) {
+                    gameState = GAME_STATE.TITLE;
+                }
             }
         }
     }
@@ -157,6 +164,14 @@ function initGame() {
 function updateGame() {
     try {
         gameTime++;
+
+        if (dKeyPressTimer > 0) {
+            dKeyPressTimer--;
+            if (dKeyPressTimer === 0) {
+                dKeyPressCount = 0;
+            }
+        }
+
         // Scroll speed based on current area (stop scrolling during boss battles)
         if (!areaManager.bossActive) {
             scrollOffset += areaManager.scrollSpeed;
@@ -444,6 +459,23 @@ function drawHUD() {
     textSize(10);
     text('SPACE: Main  Z: Sub  P: Pause', width / 2, height - 15);
 
+    if (debugMode) {
+        textAlign(LEFT, TOP);
+        fill(255, 255, 0);
+        textSize(10);
+        let debugY = 120;
+        text(`Area: ${areaManager.currentArea}`, 10, debugY);
+        text(`Progress: ${areaManager.areaProgress}`, 10, debugY + 12);
+        text(`Enemies: ${enemies.length}`, 10, debugY + 24);
+        text(`Bullets: ${bullets.length}`, 10, debugY + 36);
+        text(`E-Bullets: ${enemyBullets.length}`, 10, debugY + 48);
+        text(`FPS: ${frameRate().toFixed(1)}`, 10, debugY + 60);
+        if (player) {
+            text(`Player X: ${player.x.toFixed(0)} Y: ${player.y.toFixed(0)}`, 10, debugY + 72);
+            text(`Invuln: ${player.invulnerable ? player.invulnerableTime : 0}`, 10, debugY + 84);
+        }
+    }
+
     pop();
 }
 
@@ -566,10 +598,13 @@ function drawEnding() {
     text('Inspired by ZANAC (1986) - Compile', width / 2, height / 2 + 130);
     text('ZNK - A fan-made tribute', width / 2, height / 2 + 150);
 
-    // Restart instruction
-    fill(255);
-    textSize(14);
-    text('Press SPACE or ENTER to Return to Title', width / 2, height - 60);
+    // Restart instruction (only after 3 minutes = 180,000 milliseconds)
+    let elapsedTime = millis() - endingStartTime;
+    if (elapsedTime >= 180000) {
+        fill(255);
+        textSize(14);
+        text('Press SPACE or ENTER to Return to Title', width / 2, height - 60);
+    }
 
     pop();
 }
@@ -1024,6 +1059,12 @@ function keyPressed() {
             initGame();
         } else if (gameState === GAME_STATE.GAME_OVER) {
             gameState = GAME_STATE.TITLE;
+        } else if (gameState === GAME_STATE.ENDING) {
+            // Only allow exit after 3 minutes
+            let elapsedTime = millis() - endingStartTime;
+            if (elapsedTime >= 180000) {
+                gameState = GAME_STATE.TITLE;
+            }
         }
     }
 
@@ -1035,6 +1076,13 @@ function keyPressed() {
         }
     }
 
-    // Debug mode removed for production
+    if ((key === 'd' || key === 'D') && gameState === GAME_STATE.PAUSED) {
+        dKeyPressCount++;
+        dKeyPressTimer = 60;
+        if (dKeyPressCount >= 3) {
+            debugMode = !debugMode;
+            dKeyPressCount = 0;
+        }
+    }
 }
 

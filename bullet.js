@@ -302,10 +302,7 @@ class VibratingBullet extends Bullet {
             // Oscillate in place
             this.x = this.centerX + sin(this.time) * this.vibrationAmount;
             // Y position stays the same
-
-            // Reduce durability while oscillating (moving left/right)
-            this.durability -= 0.5; // Decrease durability per frame
-            if (this.durability < 0) this.durability = 0;
+            // Durability only decreases when hitting enemies or bullets
         }
 
         // Update size based on durability
@@ -323,11 +320,14 @@ class VibratingBullet extends Bullet {
                         bullet.hp -= 2;
                         if (bullet.hp <= 0) {
                             enemyBullets.splice(i, 1);
+                            // Reduce durability when destroying bullet
+                            this.durability -= 1;
                         }
                     } else {
                         enemyBullets.splice(i, 1);
+                        // Reduce durability when destroying bullet
+                        this.durability -= 1;
                     }
-                    // Bullet blocked, no durability loss
                 }
             }
         }
@@ -342,6 +342,8 @@ class VibratingBullet extends Bullet {
                     return; // Stop processing this frame
                 }
                 enemies[i].hp -= 0.1; // Reduced damage as requested
+                // Reduce durability when damaging enemy (every frame in contact)
+                this.durability -= 0.5;
             }
         }
 
@@ -350,6 +352,8 @@ class VibratingBullet extends Bullet {
             let d = dist(this.x, this.y, groundEnemies[i].x, groundEnemies[i].y);
             if (d < this.size + groundEnemies[i].size) {
                 groundEnemies[i].hp -= 0.1; // Reduced damage as requested
+                // Reduce durability when damaging enemy (every frame in contact)
+                this.durability -= 0.5;
             }
         }
     }

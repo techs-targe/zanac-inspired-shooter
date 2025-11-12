@@ -256,7 +256,9 @@ class Enemy {
                 this.scoreValue = 180;
                 this.color = color(255, 200, 50);
                 this.canShoot = true;
-                this.shootInterval = max(4, int(4 / this.difficultyMultiplier)); // 猛烈な連射（16連射: 60fps/4=15発/秒）
+                // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
+                let takuwashiFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
+                this.shootInterval = max(4, int(4 / takuwashiFireRate)); // 猛烈な連射（15発/秒）
                 this.bulletType = 'sig';
                 this.trackPlayer = true; // X座標を合わせる
                 this.rapidFireRange = 30; // 30pxに縮小（より正確に正面に来る必要がある）

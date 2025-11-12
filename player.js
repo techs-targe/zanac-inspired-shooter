@@ -330,11 +330,18 @@ class Player {
     }
 
     shootWeapon4() {
-        // Vibrating shot - can re-fire to reposition, removes old bullet
+        // Vibrating shot - can re-fire to reposition ONLY after oscillation starts
         let existingBulletIndex = bullets.findIndex(b => b instanceof VibratingBullet);
         if (existingBulletIndex !== -1) {
-            // Remove existing bullet before firing new one
-            bullets.splice(existingBulletIndex, 1);
+            let existingBullet = bullets[existingBulletIndex];
+            // Can only re-fire if the bullet is oscillating (not advancing)
+            if (existingBullet.state === 'oscillating') {
+                // Remove existing bullet before firing new one
+                bullets.splice(existingBulletIndex, 1);
+            } else {
+                // Can't re-fire yet - bullet is still advancing
+                return;
+            }
         }
 
         let size = 8 + this.subWeaponLevel * 4;

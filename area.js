@@ -878,6 +878,7 @@ class AreaManager {
             // Trigger ending after delay
             setTimeout(() => {
                 gameState = GAME_STATE.ENDING;
+                endingStartTime = millis(); // Record ending start time
             }, 3000); // 3 second delay to show explosion
         }
     }
