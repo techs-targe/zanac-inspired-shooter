@@ -41,6 +41,15 @@ let dKeyPressCount = 0;
 let dKeyPressTimer = 0;
 let endingStartTime = 0;
 
+// Debug enemy preview mode
+let debugEnemyPreviewMode = false;
+let debugSelectedEnemyIndex = 0;
+let debugLockedEnemy = null;
+let debugSelectedArea = 1;
+const debugEnemyTypes = ['basic', 'shooter', 'weaver', 'tank', 'fast', 'spiral', 'bomber',
+                         'charger', 'tracker', 'bouncer', 'divider', 'spawner',
+                         'drobe', 'yellowGogos', 'blueGogos', 'redGogos', 'takuwashi', 'degeed', 'backDegeed'];
+
 function setup() {
     let canvas = createCanvas(GAME_WIDTH, GAME_HEIGHT);
     canvas.parent('gameCanvas');
@@ -627,24 +636,112 @@ function drawEnding() {
 
 function drawPaused() {
     push();
-    fill(0, 0, 0, 200);
-    rect(0, height / 2 - 80, width, 160);
 
-    fill(255);
-    textSize(32);
-    textAlign(CENTER, CENTER);
-    text('PAUSED', width / 2, height / 2 - 30);
+    // Debug mode enemy preview
+    if (debugMode && debugEnemyPreviewMode) {
+        drawEnemyPreview();
+    } else {
+        // Normal pause screen
+        fill(0, 0, 0, 200);
+        rect(0, height / 2 - 80, width, 160);
 
-    textSize(14);
-    text('Press P to Resume', width / 2, height / 2 + 10);
+        fill(255);
+        textSize(32);
+        textAlign(CENTER, CENTER);
+        text('PAUSED', width / 2, height / 2 - 30);
 
-    // Show weapon info
-    textSize(12);
-    fill(200);
-    text(`Main Weapon: Level ${player.mainWeaponLevel}`, width / 2, height / 2 + 40);
-    text(`Sub Weapon: ${player.getSubWeaponName()} Level ${player.subWeaponLevel}`, width / 2, height / 2 + 58);
+        textSize(14);
+        text('Press P to Resume', width / 2, height / 2 + 10);
+
+        // Show weapon info
+        textSize(12);
+        fill(200);
+        text(`Main Weapon: Level ${player.mainWeaponLevel}`, width / 2, height / 2 + 40);
+        text(`Sub Weapon: ${player.getSubWeaponName()} Level ${player.subWeaponLevel}`, width / 2, height / 2 + 58);
+
+        // Debug mode hint
+        if (debugMode) {
+            fill(255, 255, 0);
+            textSize(10);
+            text('Press ← → to preview enemies', width / 2, height / 2 + 80);
+        }
+    }
 
     pop();
+}
+
+function drawEnemyPreview() {
+    // Dark overlay
+    fill(0, 0, 0, 230);
+    rect(0, 0, width, height);
+
+    let selectedEnemy = debugEnemyTypes[debugSelectedEnemyIndex];
+    let enemyInfo = getEnemyInfo(selectedEnemy);
+
+    // Title
+    fill(100, 255, 255);
+    textSize(24);
+    textAlign(CENTER, TOP);
+    text('ENEMY PREVIEW', width / 2, 20);
+
+    // Enemy name
+    fill(255, 200, 0);
+    textSize(20);
+    text(enemyInfo.displayName, width / 2, 60);
+
+    // Enemy preview (simple representation)
+    push();
+    translate(width / 2, 140);
+    fill(enemyInfo.color);
+    noStroke();
+    ellipse(0, 0, enemyInfo.size * 3, enemyInfo.size * 3);
+    pop();
+
+    // Enemy parameters
+    fill(255);
+    textSize(14);
+    textAlign(LEFT, TOP);
+    let infoY = 200;
+    text(`Type: ${selectedEnemy}`, 60, infoY);
+    text(`HP: ${enemyInfo.hp}`, 60, infoY + 20);
+    text(`Speed: ${enemyInfo.speed.toFixed(1)}`, 60, infoY + 40);
+    text(`Score: ${enemyInfo.scoreValue}`, 60, infoY + 60);
+    text(`Can Shoot: ${enemyInfo.canShoot ? 'Yes' : 'No'}`, 60, infoY + 80);
+
+    // Area selection
+    fill(200, 200, 255);
+    textSize(16);
+    textAlign(CENTER, TOP);
+    text(`Selected Area: ${debugSelectedArea}`, width / 2, 320);
+
+    // Lock status
+    if (debugLockedEnemy !== null) {
+        fill(255, 100, 100);
+        textSize(18);
+        text(`LOCKED: ${debugLockedEnemy}`, width / 2, 360);
+    }
+
+    // Controls
+    fill(200);
+    textSize(12);
+    textAlign(CENTER, BOTTOM);
+    text('← →: Select Enemy  ↑ ↓: Select Area', width / 2, height - 60);
+    text(`A/Z: ${debugLockedEnemy === null ? 'Lock Enemy' : 'Unlock Enemy'}`, width / 2, height - 40);
+    text('P: Resume', width / 2, height - 20);
+}
+
+function getEnemyInfo(enemyType) {
+    // Create a temporary enemy to get its parameters
+    let tempEnemy = new Enemy(enemyType, 0, 0, 1.0);
+    return {
+        displayName: enemyType.toUpperCase(),
+        hp: tempEnemy.hp,
+        speed: tempEnemy.speed,
+        size: tempEnemy.size,
+        scoreValue: tempEnemy.scoreValue,
+        canShoot: tempEnemy.canShoot,
+        color: tempEnemy.color
+    };
 }
 
 function checkCollisions() {
@@ -1103,6 +1200,50 @@ function keyPressed() {
             if (debugMode && player) {
                 player.lives = 30; // Set lives to 30
                 console.log('DEBUG MODE ACTIVATED: Lives set to 30');
+            }
+
+            // Reset preview mode when debug mode is toggled off
+            if (!debugMode) {
+                debugEnemyPreviewMode = false;
+            }
+        }
+    }
+
+    // Debug mode enemy preview controls (when paused and debug mode is on)
+    if (debugMode && gameState === GAME_STATE.PAUSED) {
+        if (keyCode === LEFT_ARROW) {
+            debugEnemyPreviewMode = true;
+            debugSelectedEnemyIndex = (debugSelectedEnemyIndex - 1 + debugEnemyTypes.length) % debugEnemyTypes.length;
+        } else if (keyCode === RIGHT_ARROW) {
+            debugEnemyPreviewMode = true;
+            debugSelectedEnemyIndex = (debugSelectedEnemyIndex + 1) % debugEnemyTypes.length;
+        } else if (keyCode === UP_ARROW) {
+            debugEnemyPreviewMode = true;
+            debugSelectedArea = constrain(debugSelectedArea - 1, 1, 12);
+        } else if (keyCode === DOWN_ARROW) {
+            debugEnemyPreviewMode = true;
+            debugSelectedArea = constrain(debugSelectedArea + 1, 1, 12);
+        } else if (key === 'a' || key === 'A' || key === 'z' || key === 'Z') {
+            // Toggle enemy lock
+            if (debugLockedEnemy === null) {
+                // Lock the selected enemy and set area
+                debugLockedEnemy = debugEnemyTypes[debugSelectedEnemyIndex];
+
+                // Change area if needed
+                if (areaManager && debugSelectedArea !== areaManager.currentArea) {
+                    areaManager.currentArea = debugSelectedArea;
+                    areaManager.areaProgress = 0;
+                    areaManager.bossActive = false;
+                    areaManager.bossDefeated = false;
+                    areaManager.currentConfig = areaManager.areaConfigs[debugSelectedArea - 1];
+                    console.log(`Area changed to: ${debugSelectedArea}`);
+                }
+
+                console.log(`Enemy locked: ${debugLockedEnemy} (Area ${debugSelectedArea})`);
+            } else {
+                // Unlock
+                debugLockedEnemy = null;
+                console.log('Enemy unlocked');
             }
         }
     }

@@ -121,6 +121,11 @@ class EnemyManager {
     }
 
     chooseEnemyType() {
+        // Debug mode: spawn only locked enemy if set
+        if (typeof debugLockedEnemy !== 'undefined' && debugLockedEnemy !== null) {
+            return debugLockedEnemy;
+        }
+
         // Probability distribution changes with difficulty
         let rand = random();
         let diff = this.difficultyLevel;
