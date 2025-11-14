@@ -345,7 +345,7 @@ class Player {
         }
 
         let size = 8 + this.subWeaponLevel * 4;
-        bullets.push(new VibratingBullet(this.x, this.y - this.size, size, this.subWeaponDurability));
+        bullets.push(new VibratingBullet(this.x, this.y - this.size, size, this.subWeaponDurability, this.subWeaponLevel));
     }
 
     shootWeapon5() {

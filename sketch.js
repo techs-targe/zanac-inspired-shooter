@@ -1231,11 +1231,47 @@ function keyPressed() {
 
                 // Change area if needed
                 if (areaManager && debugSelectedArea !== areaManager.currentArea) {
+                    // Clear all enemies and bullets
+                    enemies = [];
+                    enemyBullets = [];
+                    groundEnemies = [];
+
+                    // Reset area manager state
                     areaManager.currentArea = debugSelectedArea;
                     areaManager.areaProgress = 0;
                     areaManager.bossActive = false;
                     areaManager.bossDefeated = false;
+                    areaManager.bossDefeatedTimer = 0;
                     areaManager.currentConfig = areaManager.areaConfigs[debugSelectedArea - 1];
+
+                    // Reset area-specific flags
+                    areaManager.groundEnemies = [];
+                    areaManager.groundEnemySpawnPoints = [];
+                    areaManager.aiaiSpawned = false;
+                    areaManager.supplyBasesSpawned = [];
+                    areaManager.powerBoxFormations = [];
+                    areaManager.powerBoxMassSpawned = false;
+                    areaManager.crow = null;
+                    areaManager.crowSpawned = false;
+
+                    // Reset boss intro state
+                    areaManager.bossIntroPhase = 0;
+                    areaManager.bossIntroTimer = 0;
+                    areaManager.bossIntroScrollSpeed = 0;
+                    areaManager.bossIntroTargetY = 0;
+
+                    // Reset scroll speed based on area config
+                    if (areaManager.currentConfig.hasHighSpeed) {
+                        areaManager.normalScrollSpeed = 1.5;
+                        areaManager.highScrollSpeed = areaManager.currentConfig.scrollSpeed;
+                        areaManager.scrollSpeed = areaManager.highScrollSpeed;
+                        areaManager.isInHighSpeed = true;
+                    } else {
+                        areaManager.scrollSpeed = 1.5;
+                        areaManager.normalScrollSpeed = 1.5;
+                        areaManager.isInHighSpeed = false;
+                    }
+
                     console.log(`Area changed to: ${debugSelectedArea}`);
                 }
 

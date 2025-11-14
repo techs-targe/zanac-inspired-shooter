@@ -258,7 +258,7 @@ class Enemy {
                 this.canShoot = true;
                 // Linear fire rate scaling: 1.0x at diff 1.0, 1.5x at diff 5.0
                 let takuwashiFireRate = 1.0 + (this.difficultyMultiplier - 1.0) * 0.125;
-                this.shootInterval = max(4, int(4 / takuwashiFireRate)); // 猛烈な連射（15発/秒）
+                this.shootInterval = max(8, int(8 / takuwashiFireRate)); // 連射速度を半分に（約7.5発/秒）
                 this.bulletType = 'sig';
                 this.trackPlayer = true; // X座標を合わせる
                 this.rapidFireRange = 30; // 30pxに縮小（より正確に正面に来る必要がある）

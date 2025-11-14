@@ -257,13 +257,26 @@ class PenetratingBullet extends Bullet {
 
 // Vibrating bullet (weapon 4)
 class VibratingBullet extends Bullet {
-    constructor(x, y, size, durability) {
+    constructor(x, y, size, durability, weaponLevel = 0) {
         super(x, y, 0, -6, true, 2, size);
         this.durability = durability;
         this.maxDurability = durability;
         this.baseSize = size; // Store original size
-        this.vibrationSpeed = 0.15;
-        this.vibrationAmount = 50; // Increased from 25 to 50 for larger horizontal range
+
+        // Calculate vibration parameters based on weapon level
+        // Lv0:1, Lv1:3, Lv2:5, Lv3:7, Lv4:9, Lv5:11, Lv6-7:15
+        let multiplier;
+        if (weaponLevel === 0) {
+            multiplier = 1;
+        } else if (weaponLevel <= 5) {
+            multiplier = 1 + weaponLevel * 2;
+        } else {
+            multiplier = 15;
+        }
+
+        this.vibrationSpeed = 0.05 * multiplier;
+        this.vibrationAmount = 5 * multiplier;
+
         this.time = 0;
         this.state = 'advancing'; // 'advancing' or 'oscillating'
         this.advanceDistance = 150; // Distance to travel before stopping
