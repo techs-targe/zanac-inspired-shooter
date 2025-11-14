@@ -264,18 +264,21 @@ class VibratingBullet extends Bullet {
         this.baseSize = size; // Store original size
 
         // Calculate vibration parameters based on weapon level
-        // Lv0:5, Lv1:8, Lv2:11, Lv3:14, Lv4+:20
+        // Base at Lv0: 20px, then +20% per level, Lv5: +50% from Lv4
+        // Lv0:20, Lv1:24, Lv2:29, Lv3:35, Lv4:42, Lv5+:63
         let vibrationAmount;
         if (weaponLevel === 0) {
-            vibrationAmount = 5;
+            vibrationAmount = 20;
         } else if (weaponLevel === 1) {
-            vibrationAmount = 8;
+            vibrationAmount = 24;
         } else if (weaponLevel === 2) {
-            vibrationAmount = 11;
+            vibrationAmount = 29;
         } else if (weaponLevel === 3) {
-            vibrationAmount = 14;
+            vibrationAmount = 35;
+        } else if (weaponLevel === 4) {
+            vibrationAmount = 42;
         } else {
-            vibrationAmount = 20; // Lv4 and above
+            vibrationAmount = 63; // Lv5 and above
         }
 
         this.vibrationAmount = vibrationAmount;
