@@ -262,7 +262,7 @@ class Enemy {
                 this.bulletType = 'sig';
                 this.trackPlayer = true; // X座標を合わせる
                 this.rapidFireRange = 30; // 30pxに縮小（より正確に正面に来る必要がある）
-                this.trackSpeed = 6; // 追跡速度を上げる（逃げないように）
+                this.trackSpeed = 3; // 追跡速度を半分に（遅れてついてくる感じ）
                 break;
 
             case 'degeed':
@@ -428,7 +428,7 @@ class Enemy {
                 if (player && player.alive) {
                     let dx = player.x - this.x;
                     // 常にプレイヤーの方向に移動（条件なし・逃げない）
-                    let moveSpeed = this.trackSpeed || 6; // 速度を上げる
+                    let moveSpeed = this.trackSpeed || 3; // 速度を半分に（遅れてついてくる）
                     // 距離に応じた移動（近い時は遅く、遠い時は速く）
                     let distance = abs(dx);
                     let actualSpeed = min(moveSpeed, distance);

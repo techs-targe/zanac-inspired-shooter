@@ -300,17 +300,28 @@ class Player {
 
         // Speed increased by 30%
         let speed = (4 + this.subWeaponLevel) * 1.3;
+
+        // Size scaling: Lv0-2: base size, Lv3-4: 2x diameter, Lv5+: 3x diameter
+        let bulletSize;
+        if (this.subWeaponLevel <= 2) {
+            bulletSize = 8;
+        } else if (this.subWeaponLevel <= 4) {
+            bulletSize = 16; // 2x diameter
+        } else {
+            bulletSize = 24; // 3x diameter
+        }
+
         if (this.subWeaponLevel === 0) {
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -speed, 8));
+            bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -speed, bulletSize));
         } else if (this.subWeaponLevel === 1) {
-            bullets.push(new PenetratingBullet(this.x - 6, this.y - this.size, 0, -speed, 8));
-            bullets.push(new PenetratingBullet(this.x + 6, this.y - this.size, 0, -speed, 8));
+            bullets.push(new PenetratingBullet(this.x - 6, this.y - this.size, 0, -speed, bulletSize));
+            bullets.push(new PenetratingBullet(this.x + 6, this.y - this.size, 0, -speed, bulletSize));
         } else if (this.subWeaponLevel === 2) {
-            bullets.push(new PenetratingBullet(this.x - 10, this.y - this.size, 0, -speed, 10));
-            bullets.push(new PenetratingBullet(this.x + 10, this.y - this.size, 0, -speed, 10));
+            bullets.push(new PenetratingBullet(this.x - 10, this.y - this.size, 0, -speed, bulletSize));
+            bullets.push(new PenetratingBullet(this.x + 10, this.y - this.size, 0, -speed, bulletSize));
         } else {
             // Giant penetrating bullet
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -speed, 20));
+            bullets.push(new PenetratingBullet(this.x, this.y - this.size, 0, -speed, bulletSize));
         }
         return true; // Bullet fired successfully
     }
@@ -399,13 +410,18 @@ class Player {
             }
         }
 
-        // Reduced damage to 1/10 (0.2 instead of 2)
-        if (this.subWeaponLevel < 3) {
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 6, 0.2));
+        // Size scaling: Lv0-2: base size, Lv3-4: 2x diameter, Lv5+: 3x diameter
+        let bulletSize;
+        if (this.subWeaponLevel <= 2) {
+            bulletSize = 6;
+        } else if (this.subWeaponLevel <= 4) {
+            bulletSize = 12; // 2x diameter
         } else {
-            // Giant high-speed
-            bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, 16, 0.2));
+            bulletSize = 18; // 3x diameter
         }
+
+        // Reduced damage to 1/10 (0.2 instead of 2)
+        bullets.push(new PenetratingBullet(this.x, this.y - this.size, vx, vy, bulletSize, 0.2));
 
         // Time decreases by 0.5 seconds (30 frames) per shot - 2x duration
         if (this.subWeaponTime > 0) {
