@@ -26,14 +26,16 @@ The game features an intelligent difficulty adjustment system that monitors your
 
 ### Weapon System (0-7)
 Collect numbered power-ups to change your weapon:
-- **0 - NORMAL**: Standard straight shot
-- **1 - DOUBLE**: Twin parallel shots
-- **2 - SPREAD**: Triple forward spread
-- **3 - WIDE**: 5-way wide spread pattern
-- **4 - SIDE**: Forward cannon with side shots
-- **5 - RAPID**: High-speed single shot
-- **6 - LASER**: Powerful thick beam
-- **7 - ALL**: 8-directional all-around attack
+- **0 - ALL-RANGE**: Direction-based omnidirectional shots
+- **1 - CRUSHER**: Penetrating shots that destroy bullets
+- **2 - BARRIER**: Rotating shield with bullet destruction
+- **3 - CIRCULAR**: Orbiting bullets around the ship
+- **4 - VIBRATOR**: Wide oscillating horizontal coverage
+- **5 - REWINDER**: Boomerang (mutates to laser at Lv5+)
+- **6 - PLASMA**: Area-of-effect trigger bullet
+- **7 - HI-SPEED**: Ultra-rapid fire with movement tracking
+
+For detailed weapon specifications, see the [Weapon System Details](#-weapon-system-サブウェポン詳細) section below.
 
 ### Enemy Types
 - **Basic**: Standard enemies, good for beginners
@@ -239,6 +241,380 @@ If you are a rights holder and have concerns about this project, please open an 
 - **Developed with**: p5.js (Open Source)
 - **Created by**: techs targe
 - **Purpose**: Educational fan project and game development learning resource
+
+## 🎯 Weapon System (サブウェポン詳細)
+
+### Weapon Type Overview
+
+ZNK features 8 distinct sub-weapons (numbered 0-7), each with unique mechanics, resource systems, and level progression (Lv0-5). Each weapon balances power, coverage, and resource limitations to create diverse tactical gameplay.
+
+---
+
+### Detailed Weapon Specifications
+
+#### Weapon 0: ALL-RANGE (全方位弾)
+
+**Basic Information:**
+- **Name:** All-Range / 全方位弾
+- **Type:** Direction-based projectile
+- **Color:** Cyan (#64FFFF)
+- **Resource System:** Infinite (no limitations)
+
+**Level Progression:**
+
+| Level | Damage | Size | Fire Rate | Pattern | Bullet Speed | Special Features |
+|-------|--------|------|-----------|---------|--------------|------------------|
+| Lv0   | 1      | 4    | 8 frames  | Single  | 8 px/frame   | Fires in movement direction |
+| Lv1   | 1      | 4    | 8 frames  | Double  | 8 px/frame   | 6px offset perpendicular |
+| Lv2-5 | 1      | 4    | 8 frames  | Wide Double | 8 px/frame | 10px offset perpendicular |
+
+**Special Mechanics:**
+- **Movement Tracking:** Fires in the direction the player is moving (8 directions)
+- **Stationary Default:** When not moving, fires upward (forward)
+- **No Ammo/Time Limit:** Can be used indefinitely
+- **Perpendicular Offset:** Double shots positioned perpendicular to movement direction
+
+**Tactical Features:**
+- **Strengths:** Flexible coverage, no resource management, great for aggressive dodging
+- **Weaknesses:** Low damage, requires active movement for directional control
+- **Best Against:** Scattered enemies, weaker enemy types
+- **Unique Trait:** Only weapon that follows player movement direction
+
+---
+
+#### Weapon 1: CRUSHER (貫通弾 - Straight Crusher)
+
+**Basic Information:**
+- **Name:** Straight Crusher / 貫通弾
+- **Type:** Penetrating projectile
+- **Color:** Green-cyan (#64FFC8)
+- **Resource System:** Ammo-based (50 + 50 per level)
+
+**Level Progression:**
+
+| Level | Damage | Size (Diameter) | Fire Rate | Pattern | Bullet Speed | Max Ammo |
+|-------|--------|-----------------|-----------|---------|--------------|----------|
+| Lv0   | 2      | 8px             | 10 frames | Single  | 5.2 px/frame | 50       |
+| Lv1   | 2      | 8px             | 10 frames | Double  | 6.5 px/frame | 100      |
+| Lv2   | 2      | 8px             | 10 frames | Wide Double | 7.8 px/frame | 150    |
+| Lv3   | 2      | 16px (2x)       | 10 frames | Giant Single | 9.1 px/frame | 200  |
+| Lv4   | 2      | 16px (2x)       | 10 frames | Giant Single | 10.4 px/frame | 250 |
+| Lv5   | 2      | 24px (3x)       | 10 frames | Giant Single | 11.7 px/frame | 300 |
+
+**Special Mechanics:**
+- **Penetration:** Passes through all enemies (doesn't disappear on hit)
+- **Bullet Destruction:** Destroys enemy bullets on contact, including LEAD bullets
+- **One-At-A-Time:** Cannot fire until previous bullet leaves screen
+- **Speed Formula:** Base speed (4 + level) × 1.3
+- **Size Scaling:** Lv0-2 (8px), Lv3-4 (16px), Lv5+ (24px)
+
+**Bullet Destruction Capability:**
+- ✅ Normal enemy bullets (instant destroy)
+- ✅ Sig bullets (2 damage to HP 2)
+- ✅ Lead bullets (can destroy with 2 damage)
+
+**Tactical Features:**
+- **Strengths:** High penetration, bullet clearing, excellent against bullet-heavy stages
+- **Weaknesses:** Ammo limited, one bullet at a time, slow fire rate
+- **Best Against:** Dense enemy formations, bullet hell patterns, Lead bullets
+- **Unique Trait:** Only weapon besides 2 and 5 that can destroy Lead bullets
+
+---
+
+#### Weapon 2: BARRIER (防御幕 - Field Shutter)
+
+**Basic Information:**
+- **Name:** Field Shutter / 防御幕
+- **Type:** Rotating shield (active defense)
+- **Color:** Blue (#64C8FF)
+- **Resource System:** Durability-based (50 + 30 per level)
+
+**Level Progression:**
+
+| Level | Damage | Radius | Fire Rate | Coverage | Max Durability | Decay Rate |
+|-------|--------|--------|-----------|----------|----------------|------------|
+| Lv0   | 3      | 25px   | 20 frames | Front 30° | 50            | 1 per 0.5s |
+| Lv1   | 3      | 33px   | 20 frames | Front 30° | 80            | 1 per 0.5s |
+| Lv2   | 3      | 41px   | 20 frames | Front 60° | 110           | 1 per 0.5s |
+| Lv3   | 3      | 49px   | 20 frames | Front 180° | 140          | 1 per 0.5s |
+| Lv4   | 3      | 57px   | 20 frames | Front 270° | 170          | 1 per 0.5s |
+| Lv5   | 3      | 65px   | 20 frames | Full 360° | 200           | 1 per 0.5s |
+
+**Special Mechanics:**
+- **Active Shield:** Creates rotating barrier around player
+- **Bullet Destruction:** Destroys enemy bullets on contact, including LEAD bullets
+- **Enemy Damage:** Continuously damages enemies touching barrier (3 HP/contact)
+- **Dual Durability Loss:** Loses durability from time decay AND bullet/enemy contact
+- **Fixed Position:** Barrier does not rotate (stationary angle)
+- **Enemy Durability Cost:** -0.3 durability per frame of enemy contact
+- **Bullet Durability Cost:** -1 durability per bullet destroyed
+
+**Coverage by Level:**
+- **Lv0-1:** Front 30° (single segment, narrow cone)
+- **Lv2:** Front 60° (2 segments, wider cone)
+- **Lv3:** Front 180° (6 segments, half-circle)
+- **Lv4:** Front 270° (9 segments, three-quarters)
+- **Lv5:** Full 360° (12 segments, complete protection)
+
+**Bullet Destruction Capability:**
+- ✅ Normal enemy bullets (instant destroy, -1 durability)
+- ✅ Sig bullets (3 damage to HP 2, -1 durability)
+- ✅ Lead bullets (can destroy with 3 damage, -1 durability)
+
+**Tactical Features:**
+- **Strengths:** Passive defense, clears bullets automatically, damages enemies on contact
+- **Weaknesses:** Time-limited even without combat, fragile at low levels
+- **Best Against:** Bullet-heavy enemies, close-range combat, Lead bullets
+- **Unique Trait:** Only defensive weapon with full 360° coverage at max level
+
+---
+
+#### Weapon 3: CIRCULAR (回転弾 - Rotating Shot)
+
+**Basic Information:**
+- **Name:** Circular / 回転弾
+- **Type:** Orbiting projectiles
+- **Color:** Yellow (#FFFF64)
+- **Resource System:** Time-based (180s + 20s per level)
+
+**Level Progression:**
+
+| Level | Damage | Radius | Rotation Speed | Bullet Count | Duration |
+|-------|--------|--------|----------------|--------------|----------|
+| Lv0   | 3      | 50px   | 0.195 rad/f    | 1            | 180s     |
+| Lv1   | 3      | 50px   | 0.195 rad/f    | 1            | 200s     |
+| Lv2   | 3      | 50px   | 0.195 rad/f    | 2            | 220s     |
+| Lv3   | 3      | 70px   | 0.195 rad/f    | 2            | 240s     |
+| Lv4   | 3      | 70px   | 0.286 rad/f    | 2            | 260s     |
+| Lv5   | 3      | 70px   | 0.440 rad/f    | 3            | 280s     |
+
+**Special Mechanics:**
+- **Orbital Attack:** Bullets orbit around player continuously
+- **Bullet Destruction:** Destroys normal and Sig bullets (NOT Lead bullets)
+- **Enemy Damage:** Damages enemies on contact (3 HP/contact)
+- **Boss Deflection:** Instantly deactivates when hitting boss
+- **Time Decay:** Duration decreases continuously
+- **Rotation Formula:** Base speed × 1.3 (Lv0-3), × 1.3 (Lv4), × 2.0 (Lv5)
+
+**Bullet Destruction Capability:**
+- ✅ Normal enemy bullets (instant destroy)
+- ✅ Sig bullets (2 damage to HP 2)
+- ❌ Lead bullets (cannot destroy)
+
+**Tactical Features:**
+- **Strengths:** Continuous close-range protection, no aiming required, great against swarms
+- **Weaknesses:** Short range, cannot destroy Lead bullets, vulnerable to bosses
+- **Best Against:** Swarm enemies, close-range combat, enemies that approach from sides
+- **Unique Trait:** Only weapon with accelerating rotation speed at higher levels
+
+---
+
+#### Weapon 4: VIBRATOR (振動弾 - Vibrating Shot)
+
+**Basic Information:**
+- **Name:** Vibrator / 振動弾
+- **Type:** Oscillating projectile (area coverage)
+- **Color:** Orange (#FF9632)
+- **Resource System:** Durability per shot (fixed 20)
+
+**Level Progression:**
+
+| Level | Damage | Size | Oscillation Width | Oscillation Speed | Durability | Advance Distance |
+|-------|--------|------|-------------------|-------------------|------------|------------------|
+| Lv0   | 2      | 8px  | 63px (31.5% screen) | 0.50 rad/f     | 20         | 150px            |
+| Lv1   | 2      | 12px | 67px (33.5% screen) | 0.52 rad/f     | 20         | 150px            |
+| Lv2   | 2      | 16px | 71px (35.5% screen) | 0.54 rad/f     | 20         | 150px            |
+| Lv3   | 2      | 20px | 76px (38% screen)   | 0.56 rad/f     | 20         | 150px            |
+| Lv4   | 2      | 24px | 80px (40% screen)   | 0.58 rad/f     | 20         | 150px            |
+| Lv5   | 2      | 28px | 110px (55% screen)  | 0.60 rad/f     | 20         | 150px            |
+
+**Special Mechanics:**
+- **Two-Phase Attack:**
+  1. **Advancing:** Moves forward while oscillating for 150px
+  2. **Oscillating:** Stops vertically, oscillates horizontally indefinitely
+- **Re-Firing:** Can only re-fire after bullet enters oscillating phase
+- **Bullet Destruction:** Destroys normal and Sig bullets (NOT Lead bullets)
+- **Durability Decay:**
+  - -0.5 per frame when in contact with enemies
+  - -1 when destroying a bullet
+- **Size Scaling:** Scales down to 30% of original size as durability depletes
+- **Boss Deflection:** Flies off-screen when hitting boss
+
+**Bullet Destruction Capability:**
+- ✅ Normal enemy bullets (instant destroy, -1 durability)
+- ✅ Sig bullets (2 damage to HP 2, -1 durability)
+- ❌ Lead bullets (cannot destroy)
+
+**Tactical Features:**
+- **Strengths:** Extreme horizontal coverage (55% screen at Lv5), area denial, persistent attack
+- **Weaknesses:** Limited durability per shot, cannot destroy Lead bullets, predictable pattern
+- **Best Against:** Horizontally-aligned enemies, ground targets, area coverage
+- **Unique Trait:** Only weapon with stationary oscillating behavior
+
+---
+
+#### Weapon 5: REWINDER (往復弾 - Boomerang/Laser Mutation)
+
+**Basic Information:**
+- **Name:** Rewinder / 往復弾 (Boomerang → Laser at Lv5+)
+- **Type:** Returning projectile (Lv0-4) / Penetrating laser (Lv5+)
+- **Color:** Purple/Magenta (#C864FF)
+- **Resource System:** Infinite
+
+**Level Progression - Boomerang Mode (Lv0-4):**
+
+| Level | Damage | Size | Fire Rate | Pattern | Max Distance | Return Speed |
+|-------|--------|------|-----------|---------|--------------|--------------|
+| Lv0   | 3      | 10px | 12 frames | Single (◎) | 150px      | Variable (4-6) |
+| Lv1   | 3      | 13px | 12 frames | Single (◎) | 200px      | Variable (4-6) |
+| Lv2   | 3      | 16px | 12 frames | Single (◎) | 250px      | Variable (4-6) |
+| Lv3   | 3      | 19px | 12 frames | Double (◎◎) | 300px     | Variable (4-6) |
+| Lv4   | 3      | 22px | 12 frames | Double (◎◎) | 350px     | Variable (4-6) |
+
+**Level Progression - Laser Mode (Lv5+):**
+
+| Level | Damage | Size | Fire Rate | Laser Length | Bullet Speed |
+|-------|--------|------|-----------|--------------|--------------|
+| Lv5   | 8      | 16px | 12 frames | 100px        | 55 px/frame  |
+
+**Special Mechanics - Boomerang (Lv0-4):**
+- **Two-Phase Flight:**
+  1. **Forward:** Slow forward movement (slows down as it travels)
+  2. **Returning:** Returns to player, speeds up as it approaches
+- **Perpetual Loop:** Returns to player and relaunches automatically
+- **Bullet Destruction:** Destroys all enemy bullets including LEAD bullets
+- **Dual Boomerang:** Lv3-4 fire two boomerangs with 15px horizontal offset
+- **Boss Deflection:** Flies off-screen when hitting boss (doesn't return)
+
+**Special Mechanics - Laser (Lv5+):**
+- **Mutation:** Completely changes to straight laser, NO boomerang
+- **Ultra-High Speed:** 30 + (level × 5) = 55 px/frame at Lv5
+- **Penetrating:** Passes through all enemies
+- **Bullet Destruction:** Destroys all enemy bullets including LEAD bullets
+- **Extended Hitbox:** Uses laser length for collision detection
+
+**Bullet Destruction Capability:**
+- ✅ Normal enemy bullets (instant destroy)
+- ✅ Sig bullets (3 damage to HP 2)
+- ✅ Lead bullets (can destroy with 3 damage)
+
+**Tactical Features:**
+- **Strengths (Boomerang):** Continuous coverage, no ammo, returns to player, destroys Lead bullets
+- **Strengths (Laser):** Extreme speed, high damage, long range, destroys Lead bullets
+- **Weaknesses (Boomerang):** Slow forward speed, vulnerable to bosses
+- **Weaknesses (Laser):** Narrow hitbox, flies past targets quickly
+- **Best Against:** All enemy types, bullet-heavy stages, Lead bullets
+- **Unique Trait:** Only weapon that completely mutates at max level
+
+---
+
+#### Weapon 6: PLASMA (反応弾 - Plasma Flash)
+
+**Basic Information:**
+- **Name:** Plasma Flash / 反応弾
+- **Type:** AoE trigger projectile
+- **Color:** Pink/Magenta (#FF64FF)
+- **Resource System:** Ammo-based (15 + 5 per level)
+
+**Level Progression:**
+
+| Level | AoE Damage | Size | Fire Rate | Trigger Condition | Max Ammo | Ground Damage |
+|-------|------------|------|-----------|-------------------|----------|---------------|
+| Lv0   | 5          | 12px | 30 frames | On bullet contact | 15       | ❌            |
+| Lv1   | 5          | 12px | 30 frames | On bullet contact | 20       | ❌            |
+| Lv2   | 5          | 12px | 30 frames | On bullet contact | 25       | ❌            |
+| Lv3   | 5          | 12px | 30 frames | On bullet contact | 30       | ✅ (5 HP)     |
+| Lv4   | 5          | 12px | 30 frames | On bullet contact | 35       | ✅ (5 HP)     |
+| Lv5   | 5          | 12px | 30 frames | **Instant**       | 40       | ✅ (5 HP)     |
+
+**Special Mechanics:**
+- **Trigger-Based Damage:**
+  - Lv0-4: Triggers when touching enemy bullet or enemy
+  - Lv5: **Instant trigger** on spawn (room-wide nuke)
+- **Chain Reaction:**
+  1. Bullet touches enemy bullet/enemy
+  2. **ALL** enemy bullets on screen are erased
+  3. **ALL** air enemies take 5 damage
+  4. Lv3+: Ground enemies also take 5 damage
+- **One Bullet At A Time:** Cannot fire until previous bullet triggers/leaves screen
+- **Super Slow:** Only 2 px/frame (slowest weapon bullet)
+- **Boss Immunity:** Does not damage or trigger on bosses
+
+**Tactical Features:**
+- **Strengths:** Screen-wide bullet clear, massive AoE damage, instant clear at Lv5
+- **Weaknesses:** Very limited ammo, one shot at a time, slow bullet speed
+- **Best Against:** Bullet hell stages, dense enemy formations, emergency situations
+- **Unique Trait:** Only weapon with instant screen-wide effect (Lv5)
+
+---
+
+#### Weapon 7: HI-SPEED (高速速射弾 - High-Speed Shot)
+
+**Basic Information:**
+- **Name:** High-Speed / 高速速射弾
+- **Type:** Rapid-fire penetrating projectile
+- **Color:** Cyan (#64FFFF)
+- **Resource System:** Time-based shooting only (200s + 50s per level)
+
+**Level Progression:**
+
+| Level | Damage | Size (Diameter) | Fire Rate | Bullet Speed | Max Duration | Time Cost/Shot |
+|-------|--------|-----------------|-----------|--------------|--------------|----------------|
+| Lv0   | 0.2    | 6px             | 5 frames  | 12 px/frame  | 200s         | 0.5s (30f)     |
+| Lv1   | 0.2    | 6px             | 5 frames  | 14 px/frame  | 250s         | 0.5s (30f)     |
+| Lv2   | 0.2    | 6px             | 5 frames  | 16 px/frame  | 300s         | 0.5s (30f)     |
+| Lv3   | 0.2    | 12px (2x)       | 5 frames  | 18 px/frame  | 350s         | 0.5s (30f)     |
+| Lv4   | 0.2    | 12px (2x)       | 5 frames  | 20 px/frame  | 400s         | 0.5s (30f)     |
+| Lv5   | 0.2    | 18px (3x)       | 5 frames  | 22 px/frame  | 450s         | 0.5s (30f)     |
+
+**Special Mechanics:**
+- **Ultra-Rapid Fire:** 5 frames between shots (12 shots/second at 60 FPS)
+- **Penetrating Bullets:** Pass through all enemies
+- **Movement Curve:** Bullets curve in the direction of player movement
+  - Horizontal component: Movement direction × 4
+  - Vertical adjustment: Movement direction × 3
+- **Time Decay:** Time only decreases when shooting (30 frames per shot)
+- **Low Damage:** 1/10 normal damage (0.2 instead of 2) to balance rapid fire
+- **Speed Formula:** 12 + (level × 2) px/frame
+- **Size Scaling:** Lv0-2 (6px), Lv3-4 (12px), Lv5+ (18px)
+
+**Tactical Features:**
+- **Strengths:** Extremely high fire rate, long duration, penetrating bullets, curving shots
+- **Weaknesses:** Very low damage per bullet, time limited, requires continuous shooting
+- **Best Against:** Fast-moving enemies, dense formations, suppression fire
+- **Unique Trait:** Only weapon with time decay exclusively during shooting
+
+---
+
+### Weapon Resource Systems Summary
+
+| Weapon | Resource Type | Max Resources (Lv5) | Decay Condition |
+|--------|---------------|---------------------|-----------------|
+| 0      | None          | Infinite            | None            |
+| 1      | Ammo          | 300 shots           | Per shot        |
+| 2      | Durability    | 200 HP              | Time + Contact  |
+| 3      | Time          | 280 seconds         | Continuous      |
+| 4      | Durability/Shot | 20 HP per bullet | Enemy contact   |
+| 5      | None          | Infinite            | None            |
+| 6      | Ammo          | 40 shots            | Per shot        |
+| 7      | Time          | 450 seconds         | Per shot        |
+
+### Bullet Destruction Matrix
+
+| Weapon | Normal Bullets | Sig Bullets | Lead Bullets |
+|--------|----------------|-------------|--------------|
+| 0      | ❌              | ❌           | ❌            |
+| 1      | ✅ (Instant)    | ✅ (2 dmg)   | ✅ (2 dmg)    |
+| 2      | ✅ (Instant)    | ✅ (3 dmg)   | ✅ (3 dmg)    |
+| 3      | ✅ (Instant)    | ✅ (2 dmg)   | ❌            |
+| 4      | ✅ (Instant)    | ✅ (2 dmg)   | ❌            |
+| 5      | ✅ (Instant)    | ✅ (3 dmg)   | ✅ (3 dmg)    |
+| 6      | ✅ (All clear)  | ✅ (All clear) | ✅ (All clear) |
+| 7      | ❌              | ❌           | ❌            |
+
+**Note:** Only weapons 1, 2, 5, and 6 can destroy Lead bullets (しだれ弾).
+
+---
 
 ## 🐛 Known Issues
 
