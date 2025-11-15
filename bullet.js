@@ -264,25 +264,27 @@ class VibratingBullet extends Bullet {
         this.baseSize = size; // Store original size
 
         // Calculate vibration parameters based on weapon level
-        // Base at Lv0: 20px, then +20% per level, Lv5: +50% from Lv4
-        // Lv0:20, Lv1:24, Lv2:29, Lv3:35, Lv4:42, Lv5+:63
+        // Lv0: 63px (31.5% screen), Lv4: 80px (40% screen), Lv5: 110px (55% screen)
+        // Progressive scaling: ~+4-5px per level, Lv5 gets +30px bonus
         let vibrationAmount;
         if (weaponLevel === 0) {
-            vibrationAmount = 20;
+            vibrationAmount = 63;
         } else if (weaponLevel === 1) {
-            vibrationAmount = 24;
+            vibrationAmount = 67;
         } else if (weaponLevel === 2) {
-            vibrationAmount = 29;
+            vibrationAmount = 71;
         } else if (weaponLevel === 3) {
-            vibrationAmount = 35;
+            vibrationAmount = 76;
         } else if (weaponLevel === 4) {
-            vibrationAmount = 42;
+            vibrationAmount = 80;
         } else {
-            vibrationAmount = 63; // Lv5 and above
+            vibrationAmount = 110; // Lv5 and above - 55% screen coverage
         }
 
         this.vibrationAmount = vibrationAmount;
-        this.vibrationSpeed = vibrationAmount * 0.01; // Speed proportional to distance
+        // Decoupled speed formula: base 0.50 + small level scaling
+        // Prevents excessive speed at large oscillations
+        this.vibrationSpeed = 0.50 + (Math.min(weaponLevel, 5) * 0.02);
 
         this.time = 0;
         this.state = 'advancing'; // 'advancing' or 'oscillating'
@@ -311,6 +313,8 @@ class VibratingBullet extends Bullet {
         if (this.state === 'advancing') {
             // Move forward while oscillating
             this.x = this.centerX + sin(this.time) * this.vibrationAmount;
+            // Clamp to screen boundaries with 10px margin
+            this.x = constrain(this.x, 10, GAME_WIDTH - 10);
             this.y += this.vy;
 
             // Check if reached advance distance
@@ -321,6 +325,8 @@ class VibratingBullet extends Bullet {
         } else if (this.state === 'oscillating') {
             // Oscillate in place
             this.x = this.centerX + sin(this.time) * this.vibrationAmount;
+            // Clamp to screen boundaries with 10px margin
+            this.x = constrain(this.x, 10, GAME_WIDTH - 10);
             // Y position stays the same
             // Durability only decreases when hitting enemies or bullets
         }
