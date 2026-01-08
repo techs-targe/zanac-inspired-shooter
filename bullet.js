@@ -885,7 +885,8 @@ class BarrierWeapon {
             }
         }
 
-        // Check collision with all enemies (air enemies) - DAMAGE THEM
+        // Check collision with all enemies (air enemies) - NO DAMAGE to enemies (ramming would be OP)
+        // Barrier only protects player, durability decreases on contact
         for (let i = enemies.length - 1; i >= 0; i--) {
             // Skip if marked for deletion
             if (enemies[i].markedForDeletion) continue;
@@ -895,39 +896,16 @@ class BarrierWeapon {
                 // Check if enemy is within barrier coverage angle
                 let enemyAngle = atan2(enemies[i].y - this.player.y, enemies[i].x - this.player.x);
                 if (this.isAngleInCoverage(enemyAngle)) {
-                    // DAMAGE ENEMY - but don't go below 0
-                    if (enemies[i].hp > 0 && !enemies[i].markedForDeletion) {
-                        enemies[i].hp -= 3.0;
-                        if (enemies[i].hp < 0) enemies[i].hp = 0;
-                        this.durability -= 0.3;
-                        if (this.durability < 0) this.durability = 0;
-                        this.player.subWeaponDurability = this.durability;
-                    }
+                    // Durability decreases but enemy takes NO damage
+                    this.durability -= 0.3;
+                    if (this.durability < 0) this.durability = 0;
+                    this.player.subWeaponDurability = this.durability;
                 }
             }
         }
 
-        // Check collision with ground enemies - DAMAGE THEM
-        for (let i = groundEnemies.length - 1; i >= 0; i--) {
-            // Skip if marked for deletion
-            if (groundEnemies[i].markedForDeletion) continue;
-
-            let d = dist(this.player.x, this.player.y, groundEnemies[i].x, groundEnemies[i].y);
-            if (d < this.radius + groundEnemies[i].size) {
-                // Check if ground enemy is within barrier coverage angle
-                let enemyAngle = atan2(groundEnemies[i].y - this.player.y, groundEnemies[i].x - this.player.x);
-                if (this.isAngleInCoverage(enemyAngle)) {
-                    // DAMAGE GROUND ENEMY - but don't go below 0
-                    if (groundEnemies[i].hp > 0 && !groundEnemies[i].markedForDeletion) {
-                        groundEnemies[i].hp -= 3.0;
-                        if (groundEnemies[i].hp < 0) groundEnemies[i].hp = 0;
-                        this.durability -= 0.3;
-                        if (this.durability < 0) this.durability = 0;
-                        this.player.subWeaponDurability = this.durability;
-                    }
-                }
-            }
-        }
+        // Ground enemies: Barrier passes through without any interaction
+        // No damage to ground enemies, no durability loss
     }
 
     isAngleInCoverage(angle) {
