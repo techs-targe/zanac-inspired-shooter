@@ -791,7 +791,7 @@ class BarrierWeapon {
         this.level = level;
         this.durability = durability;
         this.maxDurability = durability;
-        this.radius = 25 + level * 8;
+        this.radius = (level === 0) ? 30 : (25 + level * 8);
         this.angle = 0;
         this.timeDecayCounter = 0; // Counter for time-based decay
 
@@ -802,6 +802,12 @@ class BarrierWeapon {
     getCoverageConfig(level) {
         switch(level) {
             case 0:
+                // LV0: Front only (slightly narrower angle, but bigger radius)
+                return {
+                    startAngle: -PI/2 - PI/15, // -90° - 12°
+                    endAngle: -PI/2 + PI/15,   // -90° + 12°
+                    segments: 1
+                };
             case 1:
                 // LV1: Front only (single segment at 0 degrees = -90 degrees in p5.js)
                 return {
@@ -844,11 +850,12 @@ class BarrierWeapon {
         // Fixed barrier - no rotation
         // this.angle += 0.05;
 
-        // Time-based durability decay: 1 per 0.5 seconds (30 frames)
+        // Time-based durability decay: 1 per ~1.67 seconds (100 frames) - 30% of original speed
+        // Stops decaying when durability reaches 1 (only enemy bullets/contact can reduce further)
         this.timeDecayCounter++;
-        if (this.timeDecayCounter >= 30) {
+        if (this.durability > 1 && this.timeDecayCounter >= 100) {
             this.durability -= 1;
-            if (this.durability < 0) this.durability = 0;
+            if (this.durability < 1) this.durability = 1;
             this.player.subWeaponDurability = this.durability;
             this.timeDecayCounter = 0;
         }

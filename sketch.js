@@ -3,6 +3,10 @@ const GAME_WIDTH = 480;
 const GAME_HEIGHT = 640;
 const FPS = 60;
 
+// Build information
+const BUILD_DATE = '2026-01-09';
+const BUILD_TIME = '23:45';
+
 // Game states
 const GAME_STATE = {
     TITLE: 0,
@@ -554,6 +558,11 @@ function drawTitle() {
         fill(255, 255, 100);
         text(`High Score: ${highScore}`, width / 2, height - 50);
     }
+
+    // Build info at bottom
+    textSize(10);
+    fill(100);
+    text(`Build: ${BUILD_DATE} ${BUILD_TIME}`, width / 2, height - 15);
     pop();
 }
 
@@ -1032,6 +1041,20 @@ function checkCollisions() {
         for (let i = enemyBullets.length - 1; i >= 0; i--) {
             if (enemyBullets[i].hits(player)) {
                 enemyBullets.splice(i, 1);
+
+                // Lv5 Weapon 2 (Barrier) grants immunity even if bullet penetrates
+                if (player.subWeaponType === 2 &&
+                    player.subWeaponLevel >= 5 &&
+                    player.subWeaponActive) {
+                    // Bullet destroyed but player takes no damage
+                    // Reduce barrier durability by 1 for penetrating hit
+                    if (player.subWeaponActive.durability > 0) {
+                        player.subWeaponActive.durability--;
+                        player.subWeaponDurability = player.subWeaponActive.durability;
+                    }
+                    continue;
+                }
+
                 player.hit();
                 enemyManager.onPlayerHit();
                 break;
