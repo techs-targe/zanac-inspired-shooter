@@ -1758,6 +1758,13 @@ class SpecialAIAI {
             player.subWeaponLevel = 5;
             if (player.subWeaponType !== 0) {
                 player.initSubWeapon(player.subWeaponType);
+
+                // Recreate active weapons for Weapon 2 (Barrier) and Weapon 3 (Rotating)
+                if (player.subWeaponType === 2) {
+                    player.subWeaponActive = new BarrierWeapon(player, player.subWeaponLevel, player.subWeaponDurability);
+                } else if (player.subWeaponType === 3) {
+                    player.subWeaponActive = new RotatingWeapon(player, player.subWeaponLevel);
+                }
             }
             console.log(`Sub weapon level: ${oldSubLevel} → ${player.subWeaponLevel}`);
 
